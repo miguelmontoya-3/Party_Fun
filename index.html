@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>PartyFun Web - El juego de mesa en tu móvil</title>
+  <meta name="description" content="Lleva PartyFun a tus reuniones con amigos. Un juego de mesa rápido y divertido en tu navegador.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Orientation warning overlay -->
+  <div id="orientation-warning">
+    <div class="rotate-device-icon"></div>
+    <h2>Modo Horizontal Obligatorio</h2>
+    <p>Por favor, gira tu dispositivo para jugar. PartyFun está diseñado para sostenerse con las dos manos de forma horizontal.</p>
+  </div>
+
+  <!-- Confetti Canvas for Winners -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <div id="app">
+
+    <!-- SCREEN 1: HOME (CONFIG) -->
+    <div id="screen-home" class="screen active">
+      <div class="glass-panel">
+        <h1>PartyFun</h1>
+        
+        <div class="home-layout">
+          <!-- Configuración de Equipos y Tiempo -->
+          <div class="home-left">
+            <div class="setup-group">
+              <label for="team-a-input">Equipo 1</label>
+              <input type="text" id="team-a-input" class="input-team" value="Equipo Alfa" placeholder="Nombre de equipo">
+            </div>
+            <div class="setup-group">
+              <label for="team-b-input">Equipo 2</label>
+              <input type="text" id="team-b-input" class="input-team" value="Equipo Beta" placeholder="Nombre de equipo">
+            </div>
+            <div class="setup-group">
+              <label>Tiempo por Turno</label>
+              <div class="time-options">
+                <button type="button" class="time-btn" data-time="30">30s</button>
+                <button type="button" class="time-btn active" data-time="60">60s</button>
+                <button type="button" class="time-btn" data-time="90">90s</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selección de Categorías -->
+          <div class="home-right">
+            <div class="setup-group" style="height: 100%; display: flex; flex-direction: column;">
+              <label style="margin-bottom: 0.5rem;">Categorías (Selecciona al menos una)</label>
+              <div id="categories-selector" class="categories-container">
+                <!-- Dynamically filled by JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="home-footer">
+          <button id="btn-start-game" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.9rem 2.5rem;">Crear Partida</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: ROUND TRANSITION -->
+    <div id="screen-transition" class="screen">
+      <div class="glass-panel">
+        <div class="round-badge" id="transition-round-badge">Ronda 1</div>
+        
+        <div class="round-info">
+          <h2 id="transition-round-title">Descripción Libre</h2>
+          <div class="round-description" id="transition-round-desc">
+            Describe la palabra usando tantas palabras como quieras, excepto la palabra oculta o derivadas.
+          </div>
+        </div>
+
+        <div class="next-team-announcement">
+          Turno de: <span id="transition-team-name" class="team-highlight">Equipo Alfa</span>
+        </div>
+
+        <button id="btn-start-turn" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.9rem 2.5rem;">¡Listo para empezar!</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: GAME PLAY -->
+    <div id="screen-game" class="screen">
+      <div class="glass-panel">
+        <div class="game-layout">
+          <!-- Left info & timer column -->
+          <div class="game-left">
+            <div class="game-header-info">
+              <div id="game-team-title" class="game-team-name">Equipo Alfa</div>
+              <div id="game-round-title" class="game-round-name">Ronda 1: Descripción</div>
+            </div>
+
+            <!-- SVG Circular Timer -->
+            <div class="timer-container">
+              <svg class="timer-svg" viewBox="0 0 100 100">
+                <circle class="timer-circle-bg" cx="50" cy="50" r="45"></circle>
+                <circle id="timer-progress" class="timer-circle-progress" cx="50" cy="50" r="45"></circle>
+              </svg>
+              <div id="timer-text" class="timer-text">60</div>
+            </div>
+
+            <div class="current-points-panel">
+              <div class="label">Puntos en este turno</div>
+              <div id="game-turn-score" class="value">0</div>
+            </div>
+          </div>
+
+          <!-- Right card arena column -->
+          <div class="game-right">
+            <div class="card-arena">
+              <!-- Visual drag indicators -->
+              <div class="card-feedback correct">Acierto</div>
+              <div class="card-feedback pass">Pasa</div>
+              
+              <div class="card-wrapper">
+                <!-- Word guessing card -->
+                <div id="word-card" class="word-card">
+                  <div id="card-category" class="card-category-indicator" style="background: rgba(255, 51, 102, 0.2); border: 1px solid #ff3366; color: #ff3366;">
+                    <span>🎬</span> Películas
+                  </div>
+                  <div id="card-word" class="card-word">Harry Potter</div>
+                  <div class="card-tip">Desliza: Derecha → Acertar | Izquierda → Pasar</div>
+                </div>
+              </div>
+
+              <!-- Fallback Touch Buttons -->
+              <div class="mobile-controls">
+                <button id="btn-game-pass" class="btn btn-danger">❌ PASAR</button>
+                <button id="btn-game-correct" class="btn btn-success">✅ ACERTAR</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: SUMMARY & EDIT -->
+    <div id="screen-summary" class="screen">
+      <div class="glass-panel">
+        <div class="summary-container">
+          <div class="summary-header">
+            <h2>Resumen del Turno</h2>
+            <p style="color: var(--text-secondary); font-size: 0.85rem;">Revisa y corrige las palabras pulsando en su estado si te has equivocado al marcar.</p>
+          </div>
+
+          <div class="summary-scroll-area">
+            <div id="summary-word-list" class="word-summary-list">
+              <!-- Dynamic list of played words -->
+            </div>
+          </div>
+
+          <div class="summary-footer">
+            <div class="summary-score-summary">
+              Puntos ganados: <span id="summary-turn-score">0</span>
+            </div>
+            <button id="btn-save-summary" class="btn btn-primary">Siguiente Turno</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: GAME OVER -->
+    <div id="screen-gameover" class="screen">
+      <div class="glass-panel" style="max-width: 700px;">
+        <div class="winner-announcement">
+          <div class="winner-crown">👑</div>
+          <div id="winner-name" class="winner-title">¡EQUIPO ALFA GANA!</div>
+          <div class="winner-score">Partida terminada</div>
+        </div>
+
+        <div id="final-scoreboard" class="scoreboard-final">
+          <!-- Final scores generated here -->
+        </div>
+
+        <div class="final-footer">
+          <button id="btn-restart-game" class="btn btn-secondary">Repetir Partida</button>
+          <button id="btn-new-game" class="btn btn-primary">Nueva Configuración</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Loading scripts -->
+  <script src="categories.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
