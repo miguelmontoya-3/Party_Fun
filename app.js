@@ -4,24 +4,25 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- GAME STATE ---
   const state = {
     teams: [
-      { name: "Equipo Alfa", scores: [0, 0, 0], totalScore: 0 },
-      { name: "Equipo Beta", scores: [0, 0, 0], totalScore: 0 }
+      { name: "Equipo Rojo", players: ["Elenica", "Marichula"], currentPlayerIndex: 0, scores: [0, 0, 0], totalScore: 0 },
+      { name: "Equipo Azul", players: ["DarkAngela", "Alinooby"], currentPlayerIndex: 0, scores: [0, 0, 0], totalScore: 0 }
     ],
     currentTeamIndex: 0,
     currentRound: 1,
     selectedTime: 60,
     selectedCategories: [],
-    
+    isUsingBackend: false,
+
     gamePool: [],  // Fixed 40 words for the entire game
     roundPool: [], // Words remaining to guess in the current round
     passedWordsThisTurn: [], // Temporary storage for words passed in the active turn
-    
+
     // Turn State
     turnWords: [], // List of { word, categoryKey, categoryName, icon, color, correct } played this turn
     timeLeft: 60,
     timerInterval: null,
     turnScore: 0,
-    
+
     // Audio Context
     audioCtx: null
   };
@@ -37,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       initAudio();
       if (!state.audioCtx) return;
-      
+
       if (state.audioCtx.state === "suspended") {
         state.audioCtx.resume();
       }
@@ -63,20 +64,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const sounds = {
     correct: () => {
-      playTone(523.25, "sine", 0.1, 0.15); // C5
-      setTimeout(() => playTone(659.25, "sine", 0.1, 0.15), 60); // E5
-      setTimeout(() => playTone(783.99, "sine", 0.2, 0.2), 120); // G5
+      // Ascending retro arpeggio with high note harmony
+      playTone(523.25, "triangle", 0.08, 0.15); // C5
+      setTimeout(() => playTone(659.25, "triangle", 0.08, 0.15), 50); // E5
+      setTimeout(() => playTone(783.99, "triangle", 0.08, 0.15), 100); // G5
+      setTimeout(() => {
+        playTone(1046.50, "sine", 0.18, 0.2); // C6
+        playTone(1318.51, "sine", 0.15, 0.08); // E6 (Harmony)
+      }, 150);
     },
     pass: () => {
-      playTone(330, "triangle", 0.12, 0.2); // E4
-      setTimeout(() => playTone(220, "triangle", 0.25, 0.2), 100); // A3
+      // Funny descending dissonant fail slide
+      playTone(392.00, "sawtooth", 0.08, 0.12); // G4
+      setTimeout(() => playTone(349.23, "sawtooth", 0.08, 0.10), 60); // F4
+      setTimeout(() => playTone(311.13, "sawtooth", 0.08, 0.08), 120); // Eb4
+      setTimeout(() => playTone(246.94, "triangle", 0.22, 0.15), 180); // B3
     },
     tick: (isLow) => {
       playTone(isLow ? 1500 : 1000, "sine", 0.03, isLow ? 0.08 : 0.05);
     },
     timeUp: () => {
-      playTone(293.66, "sawtooth", 0.15, 0.2); // D4
-      setTimeout(() => playTone(220.00, "sawtooth", 0.4, 0.25), 150); // A3
+      // Alerting double retro beep and buzz
+      playTone(880, "sawtooth", 0.1, 0.15); // A5
+      setTimeout(() => playTone(880, "sawtooth", 0.1, 0.15), 100); // A5
+      setTimeout(() => playTone(440, "sawtooth", 0.35, 0.2), 200); // A4
     },
     click: () => {
       playTone(600, "sine", 0.04, 0.05);
@@ -130,7 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
     stopConfetti();
     confettiCanvas.style.display = "block";
     confettiParticles = Array.from({ length: 120 }, () => new ConfettiParticle());
-    
+
     function animate() {
       ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
       confettiParticles.forEach(p => {
@@ -160,43 +171,526 @@ document.addEventListener("DOMContentLoaded", () => {
     target.classList.add("active");
   }
 
-  // --- CATEGORIES SELECTOR ---
-  const selector = document.getElementById("categories-selector");
-  
-  function buildCategoriesList() {
-    selector.innerHTML = "";
+  // --- CATEGORIES SELECTION & CREATION MODAL ---
+  const btnEditCategories = document.getElementById("btn-edit-categories");
+  const categoriesSelectedCountEl = document.getElementById("categories-selected-count");
+
+  const categoriesModal = document.getElementById("categories-modal");
+  const categoriesModalMain = document.getElementById("categories-modal-main");
+  const categoriesModalClose = document.getElementById("categories-modal-close");
+  const btnSaveCategories = document.getElementById("btn-save-categories");
+  const modalCategoriesGrid = document.getElementById("modal-categories-grid");
+
+  const newCategoryInput = document.getElementById("new-category-input");
+  const btnCreateCategory = document.getElementById("btn-create-category");
+
+  // Custom Category Words Panel elements
+  const customCategoryWordsPanel = document.getElementById("custom-category-words-panel");
+  const wordsPanelTitle = document.getElementById("words-panel-title");
+  const btnBackToCategories = document.getElementById("btn-back-to-categories");
+  const newWordInput = document.getElementById("new-word-input");
+  const btnAddWord = document.getElementById("btn-add-word");
+  const wordsCountLabel = document.getElementById("words-count-label");
+  const btnClearWords = document.getElementById("btn-clear-words");
+  const customWordsList = document.getElementById("custom-words-list");
+  const btnSaveWords = document.getElementById("btn-save-words");
+
+  let activeEditCategoryKey = null;
+
+  function updateHomeCategoriesCount() {
+    if (categoriesSelectedCountEl) {
+      const count = state.selectedCategories.length;
+      categoriesSelectedCountEl.innerText = `${count} ${count === 1 ? 'seleccionada' : 'seleccionadas'}`;
+    }
+  }
+
+  function renderCategoriesModalGrid() {
+    if (!modalCategoriesGrid) return;
+    modalCategoriesGrid.innerHTML = "";
+
     Object.keys(GAME_CATEGORIES).forEach(key => {
       const cat = GAME_CATEGORIES[key];
       const pill = document.createElement("div");
-      pill.className = "category-pill active"; // Active by default
+
+      const isSelected = state.selectedCategories.includes(key);
+      pill.className = `category-pill ${isSelected ? 'active' : ''}`;
       pill.style.setProperty("--category-color", cat.color);
-      
+
       const rgb = hexToRgb(cat.color);
       if (rgb) {
         pill.style.setProperty("--category-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
       }
 
+      const countSuffix = ` (${cat.words.length})`;
+      const editIcon = '<span class="edit-words-icon" style="margin-left: auto; font-size: 0.95rem; cursor: pointer; padding: 0.15rem; transition: transform 0.15s ease;" title="Editar palabras">⚙️</span>';
+
       pill.innerHTML = `
         <span class="icon">${cat.icon}</span>
-        <span class="name">${cat.name}</span>
+        <span class="name">${cat.name}${countSuffix}</span>
+        ${editIcon}
       `;
-      
+
       pill.addEventListener("click", () => {
         sounds.click();
-        const index = state.selectedCategories.indexOf(key);
-        if (index > -1) {
+        const idx = state.selectedCategories.indexOf(key);
+        if (idx > -1) {
           if (state.selectedCategories.length > 1) {
-            state.selectedCategories.splice(index, 1);
+            state.selectedCategories.splice(idx, 1);
             pill.classList.remove("active");
+          } else {
+            alert("Debes seleccionar al menos una categoría.");
           }
         } else {
+          // Make sure the category has at least 1 word!
+          if (cat.words.length === 0) {
+            alert("No puedes seleccionar un mazo vacío. Añade palabras primero.");
+            openWordsEditor(key);
+            return;
+          }
           state.selectedCategories.push(key);
           pill.classList.add("active");
         }
+        updateHomeCategoriesCount();
       });
 
+      // Bind gear icon
+      const gear = pill.querySelector(".edit-words-icon");
+      if (gear) {
+        gear.addEventListener("click", (e) => {
+          e.stopPropagation(); // Avoid toggling category selection
+          sounds.click();
+          openWordsEditor(key);
+        });
+        // Bouncing scale effect on hover
+        gear.addEventListener("mouseover", () => { gear.style.transform = "scale(1.2) rotate(30deg)"; });
+        gear.addEventListener("mouseout", () => { gear.style.transform = "scale(1) rotate(0deg)"; });
+      }
+
+      modalCategoriesGrid.appendChild(pill);
+    });
+  }
+
+  function openWordsEditor(categoryKey) {
+    activeEditCategoryKey = categoryKey;
+    const cat = GAME_CATEGORIES[categoryKey];
+    if (!cat) return;
+
+    if (wordsPanelTitle) {
+      wordsPanelTitle.innerText = `✍️ Editar Mazo: ${cat.name}`;
+    }
+
+    if (newWordInput) newWordInput.value = "";
+
+    renderCustomWordsList();
+
+    // Toggle panels
+    if (categoriesModalMain) categoriesModalMain.style.display = "none";
+    if (customCategoryWordsPanel) customCategoryWordsPanel.style.display = "block";
+  }
+
+  function renderCustomWordsList() {
+    if (!customWordsList) return;
+    customWordsList.innerHTML = "";
+
+    const cat = GAME_CATEGORIES[activeEditCategoryKey];
+    if (!cat) return;
+
+    if (wordsCountLabel) {
+      wordsCountLabel.innerText = `Palabras añadidas (${cat.words.length})`;
+    }
+
+    cat.words.forEach((word, index) => {
+      const tag = document.createElement("div");
+      tag.className = "player-tag";
+      tag.innerHTML = `
+        <span>${word}</span>
+        <span class="remove-btn" data-index="${index}">&times;</span>
+      `;
+
+      tag.querySelector(".remove-btn").addEventListener("click", () => {
+        sounds.click();
+        cat.words.splice(index, 1);
+        renderCustomWordsList();
+        saveCustomCategories();
+      });
+
+      customWordsList.appendChild(tag);
+    });
+  }
+
+  function addWord() {
+    if (!newWordInput || !activeEditCategoryKey) return;
+    const word = newWordInput.value.trim();
+    if (word) {
+      sounds.click();
+      const cat = GAME_CATEGORIES[activeEditCategoryKey];
+      if (cat) {
+        if (!cat.words.includes(word)) {
+          cat.words.push(word);
+        } else {
+          alert("Esta palabra ya está en la lista.");
+        }
+      }
+      newWordInput.value = "";
+      renderCustomWordsList();
+      saveCustomCategories();
+    }
+  }
+
+  function createCategory() {
+    if (!newCategoryInput) return;
+    const name = newCategoryInput.value.trim();
+    if (name) {
+      sounds.click();
+      const key = `custom_${Date.now()}`;
+
+      // Add custom category structure to GAME_CATEGORIES
+      GAME_CATEGORIES[key] = {
+        name: name,
+        icon: "🎨",
+        color: "#8e2de2",
+        words: [],
+        isCustom: true
+      };
+
+      // Auto select it
       state.selectedCategories.push(key);
-      selector.appendChild(pill);
+
+      newCategoryInput.value = "";
+      renderCategoriesModalGrid();
+      updateHomeCategoriesCount();
+      saveCustomCategories();
+
+      // Open word adder immediately
+      openWordsEditor(key);
+    }
+  }
+
+  function closeWordsEditor() {
+    sounds.click();
+
+    // Check if the custom category is selected but has 0 words
+    const cat = GAME_CATEGORIES[activeEditCategoryKey];
+    if (cat && cat.words.length === 0) {
+      // Remove from selection to prevent bugs
+      const idx = state.selectedCategories.indexOf(activeEditCategoryKey);
+      if (idx > -1) {
+        state.selectedCategories.splice(idx, 1);
+      }
+      saveCustomCategories();
+    }
+
+    renderCategoriesModalGrid();
+    updateHomeCategoriesCount();
+
+    if (customCategoryWordsPanel) customCategoryWordsPanel.style.display = "none";
+    if (categoriesModalMain) categoriesModalMain.style.display = "block";
+  }
+
+  function openCategoriesModal() {
+    sounds.click();
+    renderCategoriesModalGrid();
+    if (categoriesModal) {
+      categoriesModal.classList.add("active");
+    }
+  }
+
+  function closeCategoriesModal() {
+    sounds.click();
+    if (categoriesModal) {
+      categoriesModal.classList.remove("active");
+    }
+  }
+
+  // --- CLOUD SYNC & ROOM PERSISTENCE ---
+  const syncRoomInput = document.getElementById("sync-room-input");
+  const btnConnectRoom = document.getElementById("btn-connect-room");
+  const syncStatusIndicator = document.getElementById("sync-status-indicator");
+
+  let activeRoomCode = "";
+  let sseStream = null;
+
+  // Helper to save all custom categories (to server backend, cloud database, or LocalStorage fallback)
+  function saveCustomCategories() {
+    const customCats = {};
+    Object.keys(GAME_CATEGORIES).forEach(key => {
+      if (GAME_CATEGORIES[key].isCustom) {
+        customCats[key] = {
+          name: GAME_CATEGORIES[key].name,
+          icon: GAME_CATEGORIES[key].icon,
+          color: GAME_CATEGORIES[key].color,
+          words: GAME_CATEGORIES[key].words,
+          isCustom: true
+        };
+      }
+    });
+
+    // Keep LocalStorage updated as a local backup
+    localStorage.setItem("partyfun_custom_categories", JSON.stringify(customCats));
+
+    if (activeRoomCode) {
+      // Cloud database write
+      const dbUrl = `https://kvdb.io/A9vW1pM9Gj1LhY8oQz9s7J/partyfun_room_${activeRoomCode}`;
+      fetch(dbUrl, {
+        method: 'POST',
+        body: JSON.stringify(customCats)
+      })
+        .then(() => {
+          // Ping all other clients listening on ntfy.sh topic
+          fetch(`https://ntfy.sh/partyfun_room_${activeRoomCode}`, {
+            method: 'POST',
+            body: JSON.stringify({ type: 'UPDATE' })
+          });
+        })
+        .catch(err => console.error("Error saving custom categories to cloud database:", err));
+    } else if (state.isUsingBackend) {
+      // Local node server write
+      fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categories: customCats })
+      }).catch(err => console.error("Error saving categories to server:", err));
+    }
+  }
+
+  function connectToRoom() {
+    if (!syncRoomInput) return;
+    const roomCode = syncRoomInput.value.trim().toUpperCase();
+    if (!roomCode) {
+      alert("Por favor, introduce un código de sala válido.");
+      return;
+    }
+
+    sounds.click();
+    activeRoomCode = roomCode;
+
+    if (syncStatusIndicator) {
+      syncStatusIndicator.innerText = `Conectando a ${activeRoomCode}...`;
+      syncStatusIndicator.style.color = "#8e2de2";
+    }
+
+    const dbUrl = `https://kvdb.io/A9vW1pM9Gj1LhY8oQz9s7J/partyfun_room_${activeRoomCode}`;
+    fetch(dbUrl)
+      .then(res => {
+        if (!res.ok) {
+          if (res.status === 404) return {}; // Not created yet, return empty
+          throw new Error("Cloud database unavailable");
+        }
+        return res.json();
+      })
+      .then(data => {
+        loadCategoriesFromPayload(data);
+        renderCategoriesModalGrid();
+        updateHomeCategoriesCount();
+
+        if (syncStatusIndicator) {
+          syncStatusIndicator.innerText = `Conectado a ${activeRoomCode} 🌐`;
+          syncStatusIndicator.style.color = "#10b981";
+        }
+
+        // Close local Node server SSE if it was listening
+        if (state.isUsingBackend) {
+          state.isUsingBackend = false; // Bypass local server writes
+        }
+
+        // Connect to ntfy.sh SSE topic for live notifications
+        if (sseStream) sseStream.close();
+
+        sseStream = new EventSource(`https://ntfy.sh/partyfun_room_${activeRoomCode}/sse`);
+        sseStream.onmessage = (event) => {
+          try {
+            const parsed = JSON.parse(event.data);
+            if (parsed.message) {
+              const payload = JSON.parse(parsed.message);
+              if (payload.type === 'UPDATE') {
+                console.log("Cloud update signal received. Fetching latest state...");
+                fetch(dbUrl)
+                  .then(r => r.json())
+                  .then(latestData => {
+                    loadCategoriesFromPayload(latestData);
+                    renderCategoriesModalGrid();
+                    updateHomeCategoriesCount();
+
+                    if (activeEditCategoryKey) {
+                      if (!GAME_CATEGORIES[activeEditCategoryKey]) {
+                        closeWordsEditor();
+                      } else {
+                        renderCustomWordsList();
+                      }
+                    }
+                  });
+              }
+            }
+          } catch (e) {
+            // Keep-alive or non-JSON
+          }
+        };
+
+        sseStream.onerror = () => {
+          console.warn("Cloud stream disconnected.");
+        };
+      })
+      .catch(err => {
+        console.error("Cloud database connection error:", err);
+        alert("No se pudo conectar a la sala en la nube. Verifica tu conexión a internet.");
+        if (syncStatusIndicator) {
+          syncStatusIndicator.innerText = "Error de conexión";
+          syncStatusIndicator.style.color = "#ef4444";
+        }
+      });
+  }
+
+  // Helper to load custom categories from LocalStorage fallback
+  function loadCustomCategoriesFromLocalStorage() {
+    const data = localStorage.getItem("partyfun_custom_categories");
+    if (data) {
+      try {
+        const customCats = JSON.parse(data);
+        Object.keys(customCats).forEach(key => {
+          GAME_CATEGORIES[key] = customCats[key];
+          if (!state.selectedCategories.includes(key)) {
+            state.selectedCategories.push(key);
+          }
+        });
+        updateHomeCategoriesCount();
+      } catch (e) {
+        console.error("Error loading custom categories from localStorage:", e);
+      }
+    }
+  }
+
+  // Helper to load custom categories payload into active categories
+  function loadCategoriesFromPayload(customCats) {
+    // Delete existing custom categories to prevent duplicates or deleted remnants
+    Object.keys(GAME_CATEGORIES).forEach(key => {
+      if (GAME_CATEGORIES[key].isCustom) {
+        delete GAME_CATEGORIES[key];
+      }
+    });
+
+    Object.keys(customCats).forEach(key => {
+      GAME_CATEGORIES[key] = {
+        name: customCats[key].name,
+        icon: customCats[key].icon || "🎨",
+        color: customCats[key].color || "#8e2de2",
+        words: customCats[key].words || [],
+        isCustom: true
+      };
+
+      // Auto select by default if not already in list
+      if (!state.selectedCategories.includes(key)) {
+        state.selectedCategories.push(key);
+      }
+    });
+  }
+
+  // Initialize backend synchronization
+  function initializeBackendSync() {
+    state.isUsingBackend = false;
+
+    fetch('/api/categories')
+      .then(res => {
+        if (!res.ok) throw new Error("Backend not available");
+        return res.json();
+      })
+      .then(data => {
+        state.isUsingBackend = true;
+        console.log("Backend custom categories loaded:", data);
+        loadCategoriesFromPayload(data);
+        updateHomeCategoriesCount();
+
+        // Start Server-Sent Events listener for live multiplayer updates
+        const sse = new EventSource('/api/events');
+        sse.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            if (msg.type === 'UPDATE') {
+              console.log("Received categories update from server via SSE:", msg.categories);
+              loadCategoriesFromPayload(msg.categories);
+
+              // Refresh panels if currently viewing
+              renderCategoriesModalGrid();
+              updateHomeCategoriesCount();
+              if (activeEditCategoryKey) {
+                if (!GAME_CATEGORIES[activeEditCategoryKey]) {
+                  closeWordsEditor();
+                } else {
+                  renderCustomWordsList();
+                }
+              }
+            }
+          } catch (e) {
+            // Keep-alive or non-JSON messages
+          }
+        };
+
+        sse.onerror = (err) => {
+          console.warn("SSE connection error, closing stream.");
+          sse.close();
+        };
+      })
+      .catch(err => {
+        console.warn("Backend server not detected. Falling back to browser LocalStorage:", err);
+        loadCustomCategoriesFromLocalStorage();
+      });
+  }
+
+  // Prepopulate selectedCategories with all initial game categories on startup
+  Object.keys(GAME_CATEGORIES).forEach(key => {
+    state.selectedCategories.push(key);
+  });
+  updateHomeCategoriesCount();
+
+  // Load backend sync or fallback
+  initializeBackendSync();
+
+  // Binds
+  if (btnConnectRoom) btnConnectRoom.addEventListener("click", connectToRoom);
+  if (syncRoomInput) {
+    syncRoomInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        connectToRoom();
+      }
+    });
+  }
+
+  if (btnEditCategories) btnEditCategories.addEventListener("click", openCategoriesModal);
+  if (categoriesModalClose) categoriesModalClose.addEventListener("click", closeCategoriesModal);
+  if (btnSaveCategories) btnSaveCategories.addEventListener("click", closeCategoriesModal);
+
+  if (btnCreateCategory) btnCreateCategory.addEventListener("click", createCategory);
+  if (newCategoryInput) {
+    newCategoryInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        createCategory();
+      }
+    });
+  }
+
+  if (btnBackToCategories) btnBackToCategories.addEventListener("click", closeWordsEditor);
+  if (btnSaveWords) btnSaveWords.addEventListener("click", closeWordsEditor);
+
+  if (btnAddWord) btnAddWord.addEventListener("click", addWord);
+  if (newWordInput) {
+    newWordInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        addWord();
+      }
+    });
+  }
+
+  if (btnClearWords) {
+    btnClearWords.addEventListener("click", () => {
+      if (confirm("¿Estás seguro de que quieres vaciar la lista de palabras?")) {
+        sounds.click();
+        const cat = GAME_CATEGORIES[activeEditCategoryKey];
+        if (cat) cat.words = [];
+        renderCustomWordsList();
+        saveCustomCategories();
+      }
     });
   }
 
@@ -209,8 +703,6 @@ document.addEventListener("DOMContentLoaded", () => {
     } : null;
   }
 
-  buildCategoriesList();
-
   // Setup turn timer options
   document.querySelectorAll(".time-btn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -221,21 +713,207 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // --- PLAYER POOL & MODAL MANAGEMENT ---
+  const predefinedFriends = ["Elenica", "Marichula", "DarkAngela", "Alinooby", "Tontoelquelolea", "Miwi", "Raulinho", "Juanillo", "josema2418", "Ukranian", "Theplayer2000", "calvocabron", "Fernando"];
+  let customFriends = []; // Extra players added dynamically by the user
+  let activeModalTeamIndex = 0; // 0 for Red, 1 for Blue
+  let activeModalSelectedPlayers = []; // Temporary selection inside the open modal
+
+  // DOM elements
+  const btnEditRed = document.getElementById("btn-edit-red");
+  const btnEditBlue = document.getElementById("btn-edit-blue");
+  const redPlayersCountEl = document.getElementById("red-players-count");
+  const bluePlayersCountEl = document.getElementById("blue-players-count");
+
+  const playerModal = document.getElementById("player-modal");
+  const modalTitle = document.getElementById("modal-title");
+  const modalClose = document.getElementById("modal-close");
+  const btnSaveModal = document.getElementById("btn-save-modal");
+  const customPlayerInput = document.getElementById("custom-player-input");
+  const btnAddCustomPlayer = document.getElementById("btn-add-custom-player");
+  const predefinedPlayersGrid = document.getElementById("predefined-players-grid");
+
+  function updateHomeTeamCounts() {
+    if (redPlayersCountEl) {
+      const redCount = state.teams[0].players.length;
+      redPlayersCountEl.innerText = `${redCount} ${redCount === 1 ? 'integrante' : 'integrantes'} (${state.teams[0].players.join(", ") || 'ninguno'})`;
+    }
+    if (bluePlayersCountEl) {
+      const blueCount = state.teams[1].players.length;
+      bluePlayersCountEl.innerText = `${blueCount} ${blueCount === 1 ? 'integrante' : 'integrantes'} (${state.teams[1].players.join(", ") || 'ninguno'})`;
+    }
+  }
+
+  function openPlayerModal(teamIndex) {
+    sounds.click();
+    activeModalTeamIndex = teamIndex;
+    const team = state.teams[teamIndex];
+    activeModalSelectedPlayers = [...team.players];
+
+    if (modalTitle) {
+      modalTitle.innerText = `Integrantes - ${team.name}`;
+      modalTitle.style.color = teamIndex === 0 ? "#ef4444" : "#0284c7";
+    }
+
+    renderPredefinedPlayersGrid();
+    if (customPlayerInput) customPlayerInput.value = "";
+
+    if (playerModal) {
+      playerModal.classList.add("active");
+    }
+  }
+
+  function closePlayerModal() {
+    if (playerModal) {
+      playerModal.classList.remove("active");
+    }
+  }
+
+  function renderPredefinedPlayersGrid() {
+    if (!predefinedPlayersGrid) return;
+    predefinedPlayersGrid.innerHTML = "";
+
+    // Combine predefined friends + any custom friends added by the user
+    const fullPool = [...predefinedFriends, ...customFriends];
+
+    // De-duplicate in case they wrote a custom player with the same name
+    const uniquePool = Array.from(new Set(fullPool));
+
+    uniquePool.forEach(name => {
+      const pill = document.createElement("button");
+      pill.type = "button";
+      pill.className = "player-pill-toggle";
+      pill.innerText = name;
+
+      const isSelected = activeModalSelectedPlayers.includes(name);
+      if (isSelected) {
+        pill.classList.add("active");
+        pill.classList.add(activeModalTeamIndex === 0 ? "red" : "blue");
+      }
+
+      pill.addEventListener("click", () => {
+        sounds.click();
+        const index = activeModalSelectedPlayers.indexOf(name);
+        if (index > -1) {
+          activeModalSelectedPlayers.splice(index, 1);
+          pill.classList.remove("active", "red", "blue");
+        } else {
+          // A player cannot be in both teams at the same time! Enforce this.
+          const otherTeamIndex = 1 - activeModalTeamIndex;
+          const otherTeam = state.teams[otherTeamIndex];
+          if (otherTeam.players.includes(name)) {
+            // Remove from other team
+            const otIdx = otherTeam.players.indexOf(name);
+            otherTeam.players.splice(otIdx, 1);
+            updateHomeTeamCounts();
+          }
+
+          activeModalSelectedPlayers.push(name);
+          pill.classList.add("active");
+          pill.classList.add(activeModalTeamIndex === 0 ? "red" : "blue");
+        }
+      });
+
+      predefinedPlayersGrid.appendChild(pill);
+    });
+  }
+
+  function addCustomPlayer() {
+    if (!customPlayerInput) return;
+    const name = customPlayerInput.value.trim();
+    if (name) {
+      sounds.click();
+
+      // Add to custom list if not already there
+      if (!predefinedFriends.includes(name) && !customFriends.includes(name)) {
+        customFriends.push(name);
+      }
+
+      // Auto-select for the current team
+      if (!activeModalSelectedPlayers.includes(name)) {
+        // Remove from other team if needed
+        const otherTeamIndex = 1 - activeModalTeamIndex;
+        const otherTeam = state.teams[otherTeamIndex];
+        if (otherTeam.players.includes(name)) {
+          const otIdx = otherTeam.players.indexOf(name);
+          otherTeam.players.splice(otIdx, 1);
+          updateHomeTeamCounts();
+        }
+
+        activeModalSelectedPlayers.push(name);
+      }
+
+      customPlayerInput.value = "";
+      renderPredefinedPlayersGrid();
+    }
+  }
+
+  // Bind edit buttons
+  if (btnEditRed) btnEditRed.addEventListener("click", () => openPlayerModal(0));
+  if (btnEditBlue) btnEditBlue.addEventListener("click", () => openPlayerModal(1));
+
+  // Bind close buttons
+  if (modalClose) modalClose.addEventListener("click", () => {
+    sounds.click();
+    closePlayerModal();
+  });
+
+  if (btnSaveModal) {
+    btnSaveModal.addEventListener("click", () => {
+      sounds.click();
+      // Apply the selection
+      state.teams[activeModalTeamIndex].players = [...activeModalSelectedPlayers];
+      // Reset current player index to avoid out of bounds
+      state.teams[activeModalTeamIndex].currentPlayerIndex = 0;
+      updateHomeTeamCounts();
+      closePlayerModal();
+    });
+  }
+
+  // Bind custom player registration
+  if (btnAddCustomPlayer) btnAddCustomPlayer.addEventListener("click", addCustomPlayer);
+  if (customPlayerInput) {
+    customPlayerInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        addCustomPlayer();
+      }
+    });
+  }
+
+  // Initial UI updates
+  updateHomeTeamCounts();
+
   // --- INITIALIZE GAME & GAMEPOOL ---
-  const teamAInput = document.getElementById("team-a-input");
-  const teamBInput = document.getElementById("team-b-input");
   const btnStartGame = document.getElementById("btn-start-game");
 
   btnStartGame.addEventListener("click", () => {
     sounds.click();
     initAudio();
-    
-    // Names
-    state.teams[0].name = teamAInput.value.trim() || "Equipo Alfa";
-    state.teams[1].name = teamBInput.value.trim() || "Equipo Beta";
-    
-    // Scores
+
+    // Check players
+    if (state.teams[0].players.length === 0 || state.teams[1].players.length === 0) {
+      alert("Por favor, añade al menos un integrante a cada equipo.");
+      return;
+    }
+
+    // Check total words pool in selected categories
+    let totalWordsCount = 0;
+    state.selectedCategories.forEach(catKey => {
+      const cat = GAME_CATEGORIES[catKey];
+      if (cat) totalWordsCount += cat.words.length;
+    });
+
+    if (totalWordsCount < 40) {
+      alert(`Se necesitan al menos 40 palabras en total entre las categorías seleccionadas para jugar. Actualmente tienes ${totalWordsCount} palabras. Por favor, selecciona más categorías o añade más palabras.`);
+      return;
+    }
+
+    // Names and indices reset
+    state.teams[0].name = "Equipo Rojo";
+    state.teams[1].name = "Equipo Azul";
     state.teams.forEach(t => {
+      t.currentPlayerIndex = 0;
       t.scores = [0, 0, 0];
       t.totalScore = 0;
     });
@@ -289,16 +967,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const ROUND_DETAILS = {
     1: {
-      title: "Descripción Libre",
-      desc: "Describe la palabra usando tantas palabras como quieras. ¡No puedes usar palabras prohibidas, derivadas ni hacer mímica!"
+      title: "Descripción Libre"
     },
     2: {
-      title: "Una Sola Palabra",
-      desc: "Describe la palabra dando únicamente UNA palabra pista. Tu equipo solo tiene un intento para responder. ¡Piensa bien!"
+      title: "Una Sola Palabra"
     },
     3: {
-      title: "Mímica y Sonidos",
-      desc: "¡Prohibido hablar! Describe la palabra haciendo gestos, mímica o tarareando. No puedes señalar objetos reales."
+      title: "Mímica"
     }
   };
 
@@ -307,9 +982,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const rd = ROUND_DETAILS[state.currentRound];
     transitionRoundBadge.innerText = `Ronda ${state.currentRound}`;
     transitionRoundTitle.innerText = rd.title;
-    transitionRoundDesc.innerText = `${rd.desc} (${state.roundPool.length} palabras restantes en el mazo).`;
-    transitionTeamName.innerText = state.teams[state.currentTeamIndex].name;
-    
+    transitionRoundDesc.innerText = `${state.roundPool.length} palabras restantes en el mazo`;
+
+    const team = state.teams[state.currentTeamIndex];
+    const currentPlayer = team.players[team.currentPlayerIndex] || "Jugador";
+    const teamColor = state.currentTeamIndex === 0 ? "#ef4444" : "#0284c7";
+    transitionTeamName.innerHTML = `<span style="color: ${teamColor}; font-weight: 800;">${team.name}</span> <br><span style="font-size: 1.1rem; color: #64748b; font-weight: 600; display: block; margin-top: 0.3rem;">Pistas dadas por: <span style="color: ${teamColor}; font-weight: 800;">${currentPlayer.toUpperCase()}</span></span>`;
+
     showScreen("screen-transition");
   }
 
@@ -319,7 +998,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const timerText = document.getElementById("timer-text");
   const timerProgress = document.getElementById("timer-progress");
   const gameTurnScore = document.getElementById("game-turn-score");
-  
+
   btnStartTurn.addEventListener("click", () => {
     sounds.click();
     startTurn();
@@ -330,13 +1009,23 @@ document.addEventListener("DOMContentLoaded", () => {
     state.turnScore = 0;
     state.turnWords = [];
     state.passedWordsThisTurn = []; // Reset passed words for this turn
-    
+
     // Shuffling extreme randomness: Shuffle the remaining round pool at the start of every turn
     state.roundPool = shuffleArray(state.roundPool);
 
-    gameTeamTitle.innerText = state.teams[state.currentTeamIndex].name;
-    gameRoundTitle.innerText = `Ronda ${state.currentRound}: ${ROUND_DETAILS[state.currentRound].title}`;
-    
+    const team = state.teams[state.currentTeamIndex];
+    const currentPlayer = team.players[team.currentPlayerIndex] || "Jugador";
+    const teamColor = state.currentTeamIndex === 0 ? "#ef4444" : "#0284c7";
+
+    const gameTeamLabel = document.getElementById("game-team-label");
+    if (gameTeamLabel) {
+      gameTeamLabel.innerText = team.name;
+      gameTeamLabel.style.color = teamColor;
+    }
+    gameTeamTitle.innerText = currentPlayer.toUpperCase();
+    gameTeamTitle.style.color = teamColor;
+    gameRoundTitle.innerText = `¡${ROUND_DETAILS[state.currentRound].title.toUpperCase()}!`;
+
     updateTimerUI();
     updateCardUI();
     gameTurnScore.innerText = "0";
@@ -365,11 +1054,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const progress = state.timeLeft / state.selectedTime;
     const offset = circumference - (progress * circumference);
     timerProgress.style.strokeDashoffset = offset;
-    
+
     if (state.timeLeft <= 5) {
       timerProgress.classList.add("warning");
+      timerProgress.style.stroke = "";
     } else {
       timerProgress.classList.remove("warning");
+      const teamColor = state.currentTeamIndex === 0 ? "#ef4444" : "#0284c7";
+      timerProgress.style.stroke = teamColor;
     }
   }
 
@@ -385,8 +1077,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const cardCategory = document.getElementById("card-category");
     const feedbackCorrect = document.querySelector(".card-feedback.correct");
     const feedbackPass = document.querySelector(".card-feedback.pass");
+    const remainingCountEl = document.getElementById("game-remaining-count");
 
     if (!card || !cardWord || !cardCategory || !feedbackCorrect || !feedbackPass) return;
+
+    if (remainingCountEl) {
+      remainingCountEl.innerText = `x${state.roundPool.length}`;
+    }
 
     // Active card is always the first card in the deck
     const wordObj = state.roundPool[0];
@@ -399,7 +1096,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     card.classList.remove("swipe-left-anim", "swipe-right-anim");
     card.style.transform = "translate(0px, 0px) rotate(0deg)";
-    
+
     feedbackCorrect.style.opacity = 0;
     feedbackPass.style.opacity = 0;
   }
@@ -436,10 +1133,10 @@ document.addEventListener("DOMContentLoaded", () => {
     function dragStart(e) {
       if (state.timeLeft <= 0 || state.roundPool.length === 0) return;
       isDragging = true;
-      
+
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      
+
       startX = clientX;
       startY = clientY;
       card.style.transition = "none";
@@ -453,10 +1150,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function dragMove(e) {
       if (!isDragging) return;
-      
+
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      
+
       currentX = clientX - startX;
       currentY = clientY - startY;
 
@@ -506,14 +1203,14 @@ document.addEventListener("DOMContentLoaded", () => {
           feedbackPass.style.opacity = 0;
         }
       }
-      
+
       startX = startY = currentX = currentY = 0;
     }
   }
 
   function handleGuessResult(isCorrect) {
     if (state.roundPool.length === 0) return;
-    
+
     const playedCard = state.roundPool.shift();
     const card = document.getElementById("word-card");
 
@@ -560,23 +1257,23 @@ document.addEventListener("DOMContentLoaded", () => {
   function endTurn() {
     clearInterval(state.timerInterval);
     sounds.timeUp();
-    
+
     // Recycle passed words back into the roundPool randomly at the end of the turn
     state.passedWordsThisTurn.forEach(wordObj => {
       const randIdx = Math.floor(Math.random() * (state.roundPool.length + 1));
       state.roundPool.splice(randIdx, 0, wordObj);
     });
     state.passedWordsThisTurn = []; // Clear temporary pool
-    
+
     // If turn ended by time, the active card at index 0 was NOT answered.
     // It stays in state.roundPool, and will be naturally shuffled at the start of the next turn!
-    
+
     prepareSummaryScreen();
   }
 
   function prepareSummaryScreen() {
     summaryWordList.innerHTML = "";
-    
+
     if (state.turnWords.length === 0) {
       summaryWordList.innerHTML = `<div style="grid-column: span 2; text-align: center; color: var(--text-secondary); padding: 2rem;">No se jugó ninguna palabra en este turno.</div>`;
     }
@@ -592,7 +1289,7 @@ document.addEventListener("DOMContentLoaded", () => {
       cardItem.querySelector(".word-toggle-btn").addEventListener("click", (e) => {
         sounds.click();
         wordObj.correct = !wordObj.correct;
-        
+
         // Correcting summary elements dynamically adjusts roundPool
         if (wordObj.correct) {
           // Changed from Pass ➔ Correct: Remove it from roundPool
@@ -614,7 +1311,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         cardItem.className = `word-summary-item ${wordObj.correct ? 'correct' : 'pass'}`;
         e.target.innerText = wordObj.correct ? 'Acierto' : 'Pasa';
-        
+
         recalculateTurnScore();
       });
 
@@ -634,11 +1331,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // Save turn score and alternate teams or rounds
   btnSaveSummary.addEventListener("click", () => {
     sounds.click();
-    
+
     // Add points to active team
     const activeTeam = state.teams[state.currentTeamIndex];
     activeTeam.scores[state.currentRound - 1] += state.turnScore;
-    
+
+    // Rotate player index for next turn of this team
+    if (activeTeam.players.length > 0) {
+      activeTeam.currentPlayerIndex = (activeTeam.currentPlayerIndex + 1) % activeTeam.players.length;
+    }
+
     if (state.roundPool.length === 0) {
       // Round completed! (all 40 words guessed)
       if (state.currentRound < 3) {
@@ -646,7 +1348,7 @@ document.addEventListener("DOMContentLoaded", () => {
         state.currentRound++;
         // Reset round mazo: copy original 40 words and prepare
         state.roundPool = [...state.gamePool];
-        
+
         // Alternate starting team for the new round
         state.currentTeamIndex = state.currentTeamIndex === 0 ? 1 : 0;
         prepareTransitionScreen();
@@ -674,18 +1376,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let winnerText = "";
     let isTie = false;
-    
+    let winnerColor = "#1e293b";
+
     if (state.teams[0].totalScore > state.teams[1].totalScore) {
       winnerText = `¡${state.teams[0].name.toUpperCase()} GANA!`;
+      winnerColor = "#ef4444";
     } else if (state.teams[1].totalScore > state.teams[0].totalScore) {
       winnerText = `¡${state.teams[1].name.toUpperCase()} GANA!`;
+      winnerColor = "#0284c7";
     } else {
       winnerText = "¡EMPATE!";
       isTie = true;
     }
 
     winnerName.innerText = winnerText;
-    
+    winnerName.style.color = winnerColor;
+
     finalScoreboard.innerHTML = "";
     state.teams.forEach((t, idx) => {
       const isWinner = !isTie && (
@@ -693,9 +1399,14 @@ document.addEventListener("DOMContentLoaded", () => {
         (idx === 1 && state.teams[1].totalScore > state.teams[0].totalScore)
       );
 
+      const teamClass = idx === 0 ? "red-team" : "blue-team";
       const teamBox = document.createElement("div");
-      teamBox.className = `scoreboard-team-box ${isWinner ? 'winner' : ''}`;
+      teamBox.className = `scoreboard-team-box ${teamClass} ${isWinner ? 'winner' : ''}`;
+
+      const crown = isWinner ? '<div class="winner-crown-inline" style="font-size: 2.2rem; margin-bottom: 0.3rem;">👑</div>' : '';
+
       teamBox.innerHTML = `
+        ${crown}
         <h3>${t.name}</h3>
         <div class="final-points">${t.totalScore} pts</div>
         <div class="round-breakdown">
@@ -714,7 +1425,7 @@ document.addEventListener("DOMContentLoaded", () => {
   btnRestartGame.addEventListener("click", () => {
     sounds.click();
     stopConfetti();
-    
+
     state.teams.forEach(t => {
       t.scores = [0, 0, 0];
       t.totalScore = 0;
@@ -733,5 +1444,88 @@ document.addEventListener("DOMContentLoaded", () => {
     stopConfetti();
     showScreen("screen-home");
   });
+
+  // --- SCOREBOARD MODAL ---
+  const scoreboardModal = document.getElementById("scoreboard-modal");
+  const btnShowScoreboard = document.getElementById("btn-show-scoreboard");
+  const scoreboardModalClose = document.getElementById("scoreboard-modal-close");
+  const btnCloseScoreboard = document.getElementById("btn-close-scoreboard");
+  const scoreboardTableBody = document.getElementById("scoreboard-table-body");
+
+  function renderScoreboardModal() {
+    if (!scoreboardTableBody) return;
+    scoreboardTableBody.innerHTML = "";
+
+    const team1 = state.teams[0];
+    const team2 = state.teams[1];
+
+    let r1_1 = team1.scores[0];
+    let r1_2 = team1.scores[1];
+    let r1_3 = team1.scores[2];
+
+    let r2_1 = team2.scores[0];
+    let r2_2 = team2.scores[1];
+    let r2_3 = team2.scores[2];
+
+    // If we are currently reviewing the summary of the turn, incorporate the uncommitted score in real time
+    const isSummaryActive = document.getElementById("screen-summary").classList.contains("active");
+    if (isSummaryActive) {
+      if (state.currentTeamIndex === 0) {
+        if (state.currentRound === 1) r1_1 += state.turnScore;
+        else if (state.currentRound === 2) r1_2 += state.turnScore;
+        else if (state.currentRound === 3) r1_3 += state.turnScore;
+      } else {
+        if (state.currentRound === 1) r2_1 += state.turnScore;
+        else if (state.currentRound === 2) r2_2 += state.turnScore;
+        else if (state.currentRound === 3) r2_3 += state.turnScore;
+      }
+    }
+
+    const total1 = r1_1 + r1_2 + r1_3;
+    const total2 = r2_1 + r2_2 + r2_3;
+
+    const leadTeamIndex = total1 > total2 ? 0 : (total2 > total1 ? 1 : -1);
+
+    const teamsData = [
+      { index: 1, team: team2, r1: r2_1, r2: r2_2, r3: r2_3, total: total2 }, // Equipo Azul (Always top!)
+      { index: 0, team: team1, r1: r1_1, r2: r1_2, r3: r1_3, total: total1 }  // Equipo Rojo (Always bottom!)
+    ];
+
+    teamsData.forEach(data => {
+      const isWinner = leadTeamIndex > -1 && data.index === leadTeamIndex;
+      const tr = document.createElement("tr");
+      tr.className = `scoreboard-row ${isWinner ? 'winner-row' : ''}`;
+
+      const crown = isWinner ? '<span class="winner-crown-inline">👑</span>' : '';
+
+      tr.innerHTML = `
+        <td>${crown}${data.team.name}</td>
+        <td>${data.r1}</td>
+        <td>${data.r2}</td>
+        <td>${data.r3}</td>
+        <td>${data.total}</td>
+      `;
+      scoreboardTableBody.appendChild(tr);
+    });
+  }
+
+  function openScoreboardModal() {
+    sounds.click();
+    renderScoreboardModal();
+    if (scoreboardModal) {
+      scoreboardModal.classList.add("active");
+    }
+  }
+
+  function closeScoreboardModal() {
+    sounds.click();
+    if (scoreboardModal) {
+      scoreboardModal.classList.remove("active");
+    }
+  }
+
+  if (btnShowScoreboard) btnShowScoreboard.addEventListener("click", openScoreboardModal);
+  if (scoreboardModalClose) scoreboardModalClose.addEventListener("click", closeScoreboardModal);
+  if (btnCloseScoreboard) btnCloseScoreboard.addEventListener("click", closeScoreboardModal);
 
 });

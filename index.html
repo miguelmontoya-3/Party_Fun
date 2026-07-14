@@ -5,9 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>PartyFun Web - El juego de mesa en tu móvil</title>
   <meta name="description" content="Lleva PartyFun a tus reuniones con amigos. Un juego de mesa rápido y divertido en tu navegador.">
+  <!-- Google Fonts: Outfit and Caveat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+  <!-- Dynamic Animated background glows -->
+  <div class="bg-glow"></div>
+  <div class="bg-glow-2"></div>
+  <div class="bg-glow-3"></div>
 
   <!-- Orientation warning overlay -->
   <div id="orientation-warning">
@@ -23,21 +32,42 @@
 
     <!-- SCREEN 1: HOME (CONFIG) -->
     <div id="screen-home" class="screen active">
+      <div class="logo-container">
+        <div class="logo-title">PARTY FUN</div>
+        <div class="logo-subtitle">🎬 Filmación 🍿</div>
+      </div>
       <div class="glass-panel">
-        <h1>PartyFun</h1>
         
         <div class="home-layout">
           <!-- Configuración de Equipos y Tiempo -->
           <div class="home-left">
             <div class="setup-group">
-              <label for="team-a-input">Equipo 1</label>
-              <input type="text" id="team-a-input" class="input-team" value="Equipo Alfa" placeholder="Nombre de equipo">
+              <label>Configuración de Equipos</label>
+              <div class="team-cards-container">
+                <div id="btn-edit-red" class="team-setup-card red">
+                  <div class="team-card-icon">🔴</div>
+                  <div class="team-card-info">
+                    <span class="team-card-name">Equipo Rojo</span>
+                    <span id="red-players-count" class="team-card-count">Cargando integrantes...</span>
+                  </div>
+                  <div class="team-card-arrow">✏️</div>
+                </div>
+
+                <div id="btn-edit-blue" class="team-setup-card blue">
+                  <div class="team-card-icon">🔵</div>
+                  <div class="team-card-info">
+                    <span class="team-card-name">Equipo Azul</span>
+                    <span id="blue-players-count" class="team-card-count">Cargando integrantes...</span>
+                  </div>
+                  <div class="team-card-arrow">✏️</div>
+                </div>
+              </div>
             </div>
-            <div class="setup-group">
-              <label for="team-b-input">Equipo 2</label>
-              <input type="text" id="team-b-input" class="input-team" value="Equipo Beta" placeholder="Nombre de equipo">
-            </div>
-            <div class="setup-group">
+          </div>
+
+          <!-- Selección de Categorías y Tiempo -->
+          <div class="home-right">
+            <div class="setup-group" style="margin-bottom: 1rem;">
               <label>Tiempo por Turno</label>
               <div class="time-options">
                 <button type="button" class="time-btn" data-time="30">30s</button>
@@ -45,14 +75,18 @@
                 <button type="button" class="time-btn" data-time="90">90s</button>
               </div>
             </div>
-          </div>
 
-          <!-- Selección de Categorías -->
-          <div class="home-right">
-            <div class="setup-group" style="height: 100%; display: flex; flex-direction: column;">
-              <label style="margin-bottom: 0.5rem;">Categorías (Selecciona al menos una)</label>
-              <div id="categories-selector" class="categories-container">
-                <!-- Dynamically filled by JS -->
+            <div class="setup-group">
+              <label>Selección de Mazos</label>
+              <div class="team-cards-container">
+                <div id="btn-edit-categories" class="team-setup-card categories-card">
+                  <div class="team-card-icon">🎬</div>
+                  <div class="team-card-info">
+                    <span class="team-card-name">Categorías</span>
+                    <span id="categories-selected-count" class="team-card-count">0 seleccionadas</span>
+                  </div>
+                  <div class="team-card-arrow">✏️</div>
+                </div>
               </div>
             </div>
           </div>
@@ -72,7 +106,7 @@
         <div class="round-info">
           <h2 id="transition-round-title">Descripción Libre</h2>
           <div class="round-description" id="transition-round-desc">
-            Describe la palabra usando tantas palabras como quieras, excepto la palabra oculta o derivadas.
+            40 palabras restantes
           </div>
         </div>
 
@@ -84,64 +118,70 @@
       </div>
     </div>
 
-    <!-- SCREEN 3: GAME PLAY -->
-    <div id="screen-game" class="screen">
-      <div class="glass-panel">
-        <div class="game-layout">
-          <!-- Left info & timer column -->
-          <div class="game-left">
-            <div class="game-header-info">
-              <div id="game-team-title" class="game-team-name">Equipo Alfa</div>
-              <div id="game-round-title" class="game-round-name">Ronda 1: Descripción</div>
-            </div>
+    <!-- SCREEN 3: GAME PLAY (Official Layout) -->
+    <div id="screen-game" class="screen game-screen-official">
+      <!-- Hidden points tracker to prevent JS errors -->
+      <span id="game-turn-score" style="display: none;">0</span>
 
-            <!-- SVG Circular Timer -->
-            <div class="timer-container">
-              <svg class="timer-svg" viewBox="0 0 100 100">
-                <circle class="timer-circle-bg" cx="50" cy="50" r="45"></circle>
-                <circle id="timer-progress" class="timer-circle-progress" cx="50" cy="50" r="45"></circle>
-              </svg>
-              <div id="timer-text" class="timer-text">60</div>
-            </div>
+      <!-- Game Screen Header -->
+      <div class="game-header-official">
+        <div class="header-team">
+          <div id="game-team-label" class="header-label">Equipo actual</div>
+          <div id="game-team-title" class="header-value">Equipo Alfa</div>
+        </div>
+        
+        <!-- Circular Timer -->
+        <div class="timer-container-official">
+          <svg class="timer-svg-official" viewBox="0 0 100 100">
+            <circle class="timer-circle-bg" cx="50" cy="50" r="45"></circle>
+            <circle id="timer-progress" class="timer-circle-progress" cx="50" cy="50" r="45"></circle>
+          </svg>
+          <div id="timer-text" class="timer-text">60</div>
+        </div>
 
-            <div class="current-points-panel">
-              <div class="label">Puntos en este turno</div>
-              <div id="game-turn-score" class="value">0</div>
-            </div>
-          </div>
+        <div class="header-remaining">
+          <div class="header-label">Restantes</div>
+          <div id="game-remaining-count" class="header-value">x40</div>
+        </div>
+      </div>
 
-          <!-- Right card arena column -->
-          <div class="game-right">
-            <div class="card-arena">
-              <!-- Visual drag indicators -->
-              <div class="card-feedback correct">Acierto</div>
-              <div class="card-feedback pass">Pasa</div>
-              
-              <div class="card-wrapper">
-                <!-- Word guessing card -->
-                <div id="word-card" class="word-card">
-                  <div id="card-category" class="card-category-indicator" style="background: rgba(255, 51, 102, 0.2); border: 1px solid #ff3366; color: #ff3366;">
-                    <span>🎬</span> Películas
-                  </div>
-                  <div id="card-word" class="card-word">Harry Potter</div>
-                  <div class="card-tip">Desliza: Derecha → Acertar | Izquierda → Pasar</div>
-                </div>
-              </div>
+      <!-- Game Central Arena -->
+      <div class="card-arena-official">
+        <!-- Visual drag indicators -->
+        <div class="card-feedback correct">Acierto</div>
+        <div class="card-feedback pass">Pasa</div>
 
-              <!-- Fallback Touch Buttons -->
-              <div class="mobile-controls">
-                <button id="btn-game-pass" class="btn btn-danger">❌ PASAR</button>
-                <button id="btn-game-correct" class="btn btn-success">✅ ACERTAR</button>
-              </div>
-            </div>
+        <!-- Red Pass Semicircle -->
+        <button id="btn-game-pass" class="side-action pass" type="button">
+          <span class="icon">❌</span>
+        </button>
+
+        <!-- Beige Card -->
+        <div class="card-wrapper-official">
+          <div id="word-card" class="word-card-official">
+            <span class="card-tag top-left">P</span>
+            <div id="card-category" class="card-category-indicator-official">🎬 Películas</div>
+            <div id="card-word" class="card-word-official">Harry Potter</div>
+            <span class="card-tag bottom-right">F</span>
           </div>
         </div>
+
+        <!-- Green Correct Semicircle -->
+        <button id="btn-game-correct" class="side-action correct" type="button">
+          <span class="icon">✔️</span>
+        </button>
+      </div>
+
+      <!-- Game Footer -->
+      <div class="game-footer-official">
+        <div id="game-round-title" class="game-round-name-official">¡DESCRIPCIÓN LIBRE!</div>
       </div>
     </div>
 
     <!-- SCREEN 4: SUMMARY & EDIT -->
     <div id="screen-summary" class="screen">
-      <div class="glass-panel">
+      <div class="glass-panel" style="position: relative;">
+        <button id="btn-show-scoreboard" class="scoreboard-toggle-btn" title="Ver Puntuación">📊</button>
         <div class="summary-container">
           <div class="summary-header">
             <h2>Resumen del Turno</h2>
@@ -181,6 +221,139 @@
           <button id="btn-restart-game" class="btn btn-secondary">Repetir Partida</button>
           <button id="btn-new-game" class="btn btn-primary">Nueva Configuración</button>
         </div>
+      </div>
+    </div>
+
+    <!-- TEAM MEMBERS MODAL -->
+    <div id="player-modal" class="modal-overlay">
+      <div class="modal-content glass-panel">
+        <div class="modal-header">
+          <h2 id="modal-title">Integrantes - Equipo Rojo</h2>
+          <span id="modal-close" class="modal-close-btn">&times;</span>
+        </div>
+
+        <div class="modal-body">
+          <label class="modal-section-label">👥 Selecciona integrantes predefinidos:</label>
+          <div id="predefined-players-grid" class="predefined-grid">
+            <!-- Dynamically populated tags -->
+          </div>
+
+          <label class="modal-section-label" style="margin-top: 1.2rem;">✍️ ¿No está en la lista? Inscribe uno nuevo:</label>
+          <div class="add-player-form">
+            <input type="text" id="custom-player-input" class="input-team" placeholder="Nombre del jugador...">
+            <button type="button" id="btn-add-custom-player" class="btn btn-secondary btn-small">+</button>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="btn-save-modal" class="btn btn-primary" style="font-size: 1rem; padding: 0.6rem 2rem;">Listo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCOREBOARD MODAL -->
+    <div id="scoreboard-modal" class="modal-overlay">
+      <div class="modal-content glass-panel" style="max-width: 600px;">
+        <div class="modal-header">
+          <h2 style="color: #1e293b; margin: 0; display: flex; align-items: center; gap: 0.5rem;">📊 Puntuación de la Ronda</h2>
+          <span id="scoreboard-modal-close" class="modal-close-btn">&times;</span>
+        </div>
+
+        <div class="modal-body" style="padding: 0.5rem 0;">
+          <table class="scoreboard-table">
+            <thead>
+              <tr>
+                <th>Equipo</th>
+                <th>Ronda 1</th>
+                <th>Ronda 2</th>
+                <th>Ronda 3</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="scoreboard-table-body">
+              <!-- Dynamically populated rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="modal-footer" style="margin-top: 1rem;">
+          <button type="button" id="btn-close-scoreboard" class="btn btn-primary" style="font-size: 1rem; padding: 0.6rem 2rem;">Listo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CATEGORIES SELECTION & CREATION MODAL -->
+    <div id="categories-modal" class="modal-overlay">
+      <div class="modal-content glass-panel" style="max-width: 600px;">
+        
+        <!-- PANEL A: CATEGORIES GRID & CREATE FORM -->
+        <div id="categories-modal-main">
+          <div class="modal-header">
+            <h2 style="color: #1e293b; margin: 0; display: flex; align-items: center; gap: 0.5rem;">🎬 Seleccionar Categorías</h2>
+            <span id="categories-modal-close" class="modal-close-btn">&times;</span>
+          </div>
+
+          <div class="modal-body">
+            <!-- Real-time collaboration section -->
+            <div class="sync-room-panel" style="background: rgba(142, 45, 226, 0.08); border: 2.5px dashed #8e2de2; padding: 0.8rem; border-radius: 16px; margin-bottom: 1.2rem; display: flex; flex-direction: column; gap: 0.5rem;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <label class="modal-section-label" style="margin: 0; color: #8e2de2; font-weight: 800;">🌐 Sincronizar Multi-móvil</label>
+                <span id="sync-status-indicator" style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Local (Sin sala)</span>
+              </div>
+              <p style="font-size: 0.75rem; color: #64748b; margin: 0; font-weight: 600;">Escribe un código de sala para crear y añadir palabras desde varios móviles en tiempo real.</p>
+              <div class="add-player-form" style="margin-top: 0.2rem;">
+                <input type="text" id="sync-room-input" class="input-team" placeholder="Código de sala... (ej: BODA)" style="text-transform: uppercase;">
+                <button type="button" id="btn-connect-room" class="btn btn-secondary btn-small" style="font-size: 0.9rem; font-weight: 800; height: 38px; line-height: 1; border-color: #8e2de2; color: #8e2de2; background: #faf5ff;">Conectar</button>
+              </div>
+            </div>
+
+            <label class="modal-section-label">📌 Elige los mazos con los que jugar:</label>
+            <div id="modal-categories-grid" class="categories-container" style="max-height: 180px; margin-bottom: 1.2rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
+              <!-- Dynamically populated categories -->
+            </div>
+
+            <label class="modal-section-label">➕ ¿Quieres crear tu propio mazo personalizado?</label>
+            <div class="add-player-form" style="margin-top: 0.3rem;">
+              <input type="text" id="new-category-input" class="input-team" placeholder="Nombre de categoría... (ej: Familia 🤭)">
+              <button type="button" id="btn-create-category" class="btn btn-secondary btn-small" style="font-size: 0.95rem; font-weight: 700; height: 38px; line-height: 1;">Crear</button>
+            </div>
+          </div>
+
+          <div class="modal-footer" style="margin-top: 1.2rem;">
+            <button type="button" id="btn-save-categories" class="btn btn-primary" style="font-size: 1rem; padding: 0.6rem 2rem;">Listo</button>
+          </div>
+        </div>
+
+        <!-- PANEL B: CUSTOM CATEGORY WORDS EDITOR (Hidden by default) -->
+        <div id="custom-category-words-panel" style="display: none;">
+          <div class="modal-header">
+            <h2 id="words-panel-title" style="color: #1e293b; margin: 0; display: flex; align-items: center; gap: 0.5rem;">✍️ Añadir palabras</h2>
+            <span id="btn-back-to-categories" class="modal-close-btn" style="font-size: 1rem; font-weight: 700; border: 2px solid #cbd5e1; border-radius: 8px; padding: 0.2rem 0.5rem; line-height: 1.2; vertical-align: middle;">Volver</span>
+          </div>
+
+          <div class="modal-body">
+            <label class="modal-section-label">📝 Añade palabras en secreto para jugar con tus amigos:</label>
+            <div class="add-player-form" style="margin-bottom: 0.8rem;">
+              <input type="text" id="new-word-input" class="input-team" placeholder="Escribe una palabra y pulsa +...">
+              <button type="button" id="btn-add-word" class="btn btn-secondary btn-small">+</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <label id="words-count-label" class="modal-section-label" style="margin-bottom: 0;">Palabras añadidas (0)</label>
+              <span id="btn-clear-words" style="color: #ef4444; font-size: 0.75rem; font-weight: 700; cursor: pointer; text-decoration: underline;">Borrar todas</span>
+            </div>
+            
+            <div id="custom-words-list" class="players-list" style="max-height: 120px; min-height: 80px; align-content: flex-start; overflow-y: auto;">
+              <!-- Dynamically populated custom words list tags -->
+            </div>
+          </div>
+
+          <div class="modal-footer" style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <p style="font-size: 0.75rem; color: #64748b; margin: 0; font-weight: 600;">⚠️ Se requiere añadir palabras para usar este mazo.</p>
+            <button type="button" id="btn-save-words" class="btn btn-primary" style="font-size: 1rem; padding: 0.6rem 2rem;">Listo</button>
+          </div>
+        </div>
+
       </div>
     </div>
 
