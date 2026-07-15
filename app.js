@@ -1,6 +1,30 @@
 /* PartyFun Web - Game Logic (Time's Up Rules & Extreme Randomness) */
 
 document.addEventListener("DOMContentLoaded", () => {
+  // --- FIREBASE CONFIGURATION ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyAwh0i0b_LaKsDGfQ7nke0cKAttpD8fxRM",
+    authDomain: "party-fun-2080e.firebaseapp.com",
+    projectId: "party-fun-2080e",
+    storageBucket: "party-fun-2080e.firebasestorage.app",
+    messagingSenderId: "189073853948",
+    appId: "1:189073853948:web:a5de21dbe56f4b092e3679",
+    measurementId: "G-0W91MPG8WV",
+    databaseURL: "https://party-fun-2080e-default-rtdb.firebaseio.com"
+  };
+
+  let database = null;
+  try {
+    if (typeof firebase !== 'undefined') {
+      firebase.initializeApp(firebaseConfig);
+      database = firebase.database();
+      console.log("Firebase Realtime Database inicializada correctamente.");
+    } else {
+      console.warn("SDK de Firebase no detectado.");
+    }
+  } catch (e) {
+    console.error("Error al inicializar Firebase:", e);
+  }
   // --- GAME STATE ---
   const state = {
     teams: [
@@ -408,9 +432,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const syncStatusIndicator = document.getElementById("sync-status-indicator");
 
   let activeRoomCode = "";
-  let sseStream = null;
+  let firebaseRoomRef = null;
 
-  // Helper to save all custom categories (to server backend, cloud database, or LocalStorage fallback)
+  // Helper to save all custom categories (to server backend, Firebase cloud database, or LocalStorage fallback)
   function saveCustomCategories() {
     const customCats = {};
     Object.keys(GAME_CATEGORIES).forEach(key => {
@@ -428,21 +452,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Keep LocalStorage updated as a local backup
     localStorage.setItem("partyfun_custom_categories", JSON.stringify(customCats));
 
-    if (activeRoomCode) {
-      // Cloud database write
-      const dbUrl = `https://kvdb.io/A9vW1pM9Gj1LhY8oQz9s7J/partyfun_room_${activeRoomCode}`;
-      fetch(dbUrl, {
-        method: 'POST',
-        body: JSON.stringify(customCats)
-      })
-        .then(() => {
-          // Ping all other clients listening on ntfy.sh topic
-          fetch(`https://ntfy.sh/partyfun_room_${activeRoomCode}`, {
-            method: 'POST',
-            body: JSON.stringify({ type: 'UPDATE' })
-          });
-        })
-        .catch(err => console.error("Error saving custom categories to cloud database:", err));
+    if (activeRoomCode && firebaseRoomRef) {
+      // Save directly to Firebase Realtime Database
+      firebaseRoomRef.set(customCats)
+        .catch(err => console.error("Error al guardar en Firebase:", err));
     } else if (state.isUsingBackend) {
       // Local node server write
       fetch('/api/categories', {
@@ -469,75 +482,55 @@ document.addEventListener("DOMContentLoaded", () => {
       syncStatusIndicator.style.color = "#8e2de2";
     }
 
-    const dbUrl = `https://kvdb.io/A9vW1pM9Gj1LhY8oQz9s7J/partyfun_room_${activeRoomCode}`;
-    fetch(dbUrl)
-      .then(res => {
-        if (!res.ok) {
-          if (res.status === 404) return {}; // Not created yet, return empty
-          throw new Error("Cloud database unavailable");
+    if (!database) {
+      alert("La base de datos de Firebase no está inicializada.");
+      if (syncStatusIndicator) {
+        syncStatusIndicator.innerText = "Error (Firebase no cargado)";
+        syncStatusIndicator.style.color = "#ef4444";
+      }
+      return;
+    }
+
+    // Set ref to rooms/ROOMCODE
+    if (firebaseRoomRef) {
+      firebaseRoomRef.off(); // Detach previous listeners
+    }
+    firebaseRoomRef = database.ref(`rooms/${activeRoomCode}`);
+
+    // Set up real-time listener
+    firebaseRoomRef.on('value', (snapshot) => {
+      const data = snapshot.val() || {};
+      console.log("Firebase sync data received:", data);
+      
+      loadCategoriesFromPayload(data);
+      renderCategoriesModalGrid();
+      updateHomeCategoriesCount();
+
+      if (activeEditCategoryKey) {
+        if (!GAME_CATEGORIES[activeEditCategoryKey]) {
+          closeWordsEditor();
+        } else {
+          renderCustomWordsList();
         }
-        return res.json();
-      })
-      .then(data => {
-        loadCategoriesFromPayload(data);
-        renderCategoriesModalGrid();
-        updateHomeCategoriesCount();
+      }
 
-        if (syncStatusIndicator) {
-          syncStatusIndicator.innerText = `Conectado a ${activeRoomCode} 🌐`;
-          syncStatusIndicator.style.color = "#10b981";
-        }
+      if (syncStatusIndicator) {
+        syncStatusIndicator.innerText = `Conectado a ${activeRoomCode} 🌐`;
+        syncStatusIndicator.style.color = "#10b981";
+      }
+    }, (error) => {
+      console.error("Firebase subscription error:", error);
+      alert("No se pudo conectar a la sala en Firebase. Verifica tu conexión a internet o las reglas de la base de datos.");
+      if (syncStatusIndicator) {
+        syncStatusIndicator.innerText = "Error de conexión";
+        syncStatusIndicator.style.color = "#ef4444";
+      }
+    });
 
-        // Close local Node server SSE if it was listening
-        if (state.isUsingBackend) {
-          state.isUsingBackend = false; // Bypass local server writes
-        }
-
-        // Connect to ntfy.sh SSE topic for live notifications
-        if (sseStream) sseStream.close();
-
-        sseStream = new EventSource(`https://ntfy.sh/partyfun_room_${activeRoomCode}/sse`);
-        sseStream.onmessage = (event) => {
-          try {
-            const parsed = JSON.parse(event.data);
-            if (parsed.message) {
-              const payload = JSON.parse(parsed.message);
-              if (payload.type === 'UPDATE') {
-                console.log("Cloud update signal received. Fetching latest state...");
-                fetch(dbUrl)
-                  .then(r => r.json())
-                  .then(latestData => {
-                    loadCategoriesFromPayload(latestData);
-                    renderCategoriesModalGrid();
-                    updateHomeCategoriesCount();
-
-                    if (activeEditCategoryKey) {
-                      if (!GAME_CATEGORIES[activeEditCategoryKey]) {
-                        closeWordsEditor();
-                      } else {
-                        renderCustomWordsList();
-                      }
-                    }
-                  });
-              }
-            }
-          } catch (e) {
-            // Keep-alive or non-JSON
-          }
-        };
-
-        sseStream.onerror = () => {
-          console.warn("Cloud stream disconnected.");
-        };
-      })
-      .catch(err => {
-        console.error("Cloud database connection error:", err);
-        alert("No se pudo conectar a la sala en la nube. Verifica tu conexión a internet.");
-        if (syncStatusIndicator) {
-          syncStatusIndicator.innerText = "Error de conexión";
-          syncStatusIndicator.style.color = "#ef4444";
-        }
-      });
+    // Close local Node server SSE if it was listening
+    if (state.isUsingBackend) {
+      state.isUsingBackend = false; // Bypass local server writes
+    }
   }
 
   // Helper to load custom categories from LocalStorage fallback
