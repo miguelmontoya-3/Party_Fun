@@ -91,7 +91,8 @@ const server = http.createServer((req, res) => {
   }
 
   // 4. Static files server
-  let uri = req.url === '/' ? '/index.html' : req.url;
+  const cleanUrl = req.url.split('?')[0];
+  let uri = cleanUrl === '/' ? '/index.html' : cleanUrl;
   
   // Safe path resolution
   let filePath = path.join(__dirname, uri);

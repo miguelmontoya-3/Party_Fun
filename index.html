@@ -107,7 +107,8 @@
 
     <!-- SCREEN 2: ROUND TRANSITION -->
     <div id="screen-transition" class="screen">
-      <div class="glass-panel">
+      <div class="glass-panel" style="position: relative;">
+        <button type="button" class="game-home-btn btn-exit-game" title="Volver al Inicio">🏠</button>
         <div class="round-badge" id="transition-round-badge">Ronda 1</div>
         
         <div class="round-info">
@@ -126,7 +127,8 @@
     </div>
 
     <!-- SCREEN 3: GAME PLAY (Official Layout) -->
-    <div id="screen-game" class="screen game-screen-official">
+    <div id="screen-game" class="screen game-screen-official" style="position: relative;">
+      <button type="button" class="game-home-btn btn-exit-game" title="Volver al Inicio">🏠</button>
       <!-- Hidden points tracker to prevent JS errors -->
       <span id="game-turn-score" style="display: none;">0</span>
 
@@ -188,6 +190,7 @@
     <!-- SCREEN 4: SUMMARY & EDIT -->
     <div id="screen-summary" class="screen">
       <div class="glass-panel" style="position: relative;">
+        <button type="button" class="game-home-btn btn-exit-game" title="Volver al Inicio">🏠</button>
         <button id="btn-show-scoreboard" class="scoreboard-toggle-btn" title="Ver Puntuación">📊</button>
         <div class="summary-container">
           <div class="summary-header">

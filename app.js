@@ -637,7 +637,22 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load backend sync or fallback
   initializeBackendSync();
 
+  function confirmExitGame() {
+    sounds.click();
+    const confirmLeave = confirm("¿Estás seguro de que quieres salir de la partida actual? Volverás a la pantalla de inicio y perderás el progreso de la ronda.");
+    if (confirmLeave) {
+      sounds.click();
+      // Clear active turn timer interval if running
+      clearInterval(state.timerInterval);
+      showScreen("screen-home");
+    }
+  }
+
   // Binds
+  document.querySelectorAll(".btn-exit-game").forEach(btn => {
+    btn.addEventListener("click", confirmExitGame);
+  });
+
   if (btnConnectRoom) btnConnectRoom.addEventListener("click", connectToRoom);
   if (syncRoomInput) {
     syncRoomInput.addEventListener("keypress", (e) => {

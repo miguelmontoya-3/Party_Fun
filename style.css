@@ -1558,6 +1558,51 @@ h2 {
   100% { transform: translateY(-3px) scale(1.1); }
 }
 
+.game-home-btn {
+  background: #f1f5f9;
+  border: 2px solid #cbd5e1;
+  color: #475569;
+  font-size: 1.25rem;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 4px 0 #94a3b8, 
+    0 6px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.15s ease-in-out;
+}
+.game-home-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 0 #94a3b8, 
+    0 8px 12px rgba(0, 0, 0, 0.15);
+}
+.game-home-btn:active {
+  transform: translateY(1px);
+  box-shadow: 
+    0 2px 0 #94a3b8, 
+    0 4px 6px rgba(0, 0, 0, 0.08);
+}
+
+.btn-exit-game {
+  position: absolute;
+  top: 1.2rem;
+  left: 1.2rem;
+  z-index: 100;
+}
+
+@supports (padding: env(safe-area-inset-left)) {
+  .btn-exit-game {
+    left: max(1.2rem, env(safe-area-inset-left));
+    top: max(1.2rem, env(safe-area-inset-top));
+  }
+}
+
+
 /* ============================================================
    MOBILE LANDSCAPE OPTIMIZATION (iPhone in Chrome shortcut)
    Target: landscape viewports with max-height ~430px
@@ -2116,6 +2161,28 @@ h2 {
     font-size: 0.9rem;
     margin-right: 0.2rem;
   }
+
+  .game-home-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 1.05rem;
+    border-radius: 10px;
+    box-shadow: 
+      0 3px 0 #94a3b8, 
+      0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-exit-game {
+    top: 0.6rem;
+    left: 0.6rem;
+  }
+
+  @supports (padding: env(safe-area-inset-left)) {
+    .btn-exit-game {
+      left: max(0.6rem, env(safe-area-inset-left));
+      top: max(0.6rem, env(safe-area-inset-top));
+    }
+  }
 }
 
 /* --- EXTRA SMALL LANDSCAPE (iPhone SE, older phones) --- */
@@ -2203,6 +2270,13 @@ h2 {
   .scoreboard-team-box .final-points {
     font-size: 1.5rem;
   }
+
+  .game-home-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
 }
 
 /* --- TOUCH INTERACTION OPTIMIZATIONS --- */
@@ -2286,5 +2360,17 @@ h2 {
 
   .category-pill {
     min-height: 36px;
+  }
+
+  .game-home-btn:hover {
+    transform: none;
+    box-shadow: 
+      0 4px 0 #94a3b8, 
+      0 6px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .game-home-btn {
+    min-width: 44px;
+    min-height: 44px;
   }
 }
