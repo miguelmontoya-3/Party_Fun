@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ],
     currentTeamIndex: 0,
     currentRound: 1,
-    selectedTime: 60,
+    selectedTime: 40,
     selectedCategories: [],
     isUsingBackend: false,
 
@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Turn State
     turnWords: [], // List of { word, categoryKey, categoryName, icon, color, correct } played this turn
-    timeLeft: 60,
+    timeLeft: 40,
     timerInterval: null,
     turnScore: 0,
 
@@ -334,8 +334,20 @@ document.addEventListener("DOMContentLoaded", () => {
       tag.querySelector(".remove-btn").addEventListener("click", () => {
         sounds.click();
         cat.words.splice(index, 1);
-        renderCustomWordsList();
-        saveCustomCategories();
+        if (cat.words.length === 0) {
+          const idx = state.selectedCategories.indexOf(activeEditCategoryKey);
+          if (idx > -1) {
+            state.selectedCategories.splice(idx, 1);
+          }
+          if (cat.isCustom) {
+            delete GAME_CATEGORIES[activeEditCategoryKey];
+          }
+          saveCustomCategories();
+          closeWordsEditor();
+        } else {
+          renderCustomWordsList();
+          saveCustomCategories();
+        }
       });
 
       customWordsList.appendChild(tag);
@@ -400,6 +412,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const idx = state.selectedCategories.indexOf(activeEditCategoryKey);
       if (idx > -1) {
         state.selectedCategories.splice(idx, 1);
+      }
+      if (cat.isCustom) {
+        delete GAME_CATEGORIES[activeEditCategoryKey];
       }
       saveCustomCategories();
     }
@@ -637,15 +652,32 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load backend sync or fallback
   initializeBackendSync();
 
+  const confirmModal = document.getElementById("confirm-modal");
+  const btnConfirmCancel = document.getElementById("btn-confirm-cancel");
+  const btnConfirmAccept = document.getElementById("btn-confirm-accept");
+
   function confirmExitGame() {
     sounds.click();
-    const confirmLeave = confirm("¿Estás seguro de que quieres salir de la partida actual? Volverás a la pantalla de inicio y perderás el progreso de la ronda.");
-    if (confirmLeave) {
+    if (confirmModal) {
+      confirmModal.classList.add("active");
+    }
+  }
+
+  if (btnConfirmCancel) {
+    btnConfirmCancel.addEventListener("click", () => {
       sounds.click();
+      if (confirmModal) confirmModal.classList.remove("active");
+    });
+  }
+
+  if (btnConfirmAccept) {
+    btnConfirmAccept.addEventListener("click", () => {
+      sounds.click();
+      if (confirmModal) confirmModal.classList.remove("active");
       // Clear active turn timer interval if running
       clearInterval(state.timerInterval);
       showScreen("screen-home");
-    }
+    });
   }
 
   // Binds
@@ -692,12 +724,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (btnClearWords) {
     btnClearWords.addEventListener("click", () => {
-      if (confirm("¿Estás seguro de que quieres vaciar la lista de palabras?")) {
+      if (confirm("¿Estás seguro de que quieres vaciar la lista de palabras? Esto eliminará la categoría por completo al no tener palabras.")) {
         sounds.click();
         const cat = GAME_CATEGORIES[activeEditCategoryKey];
-        if (cat) cat.words = [];
-        renderCustomWordsList();
-        saveCustomCategories();
+        if (cat) {
+          cat.words = [];
+          const idx = state.selectedCategories.indexOf(activeEditCategoryKey);
+          if (idx > -1) {
+            state.selectedCategories.splice(idx, 1);
+          }
+          if (cat.isCustom) {
+            delete GAME_CATEGORIES[activeEditCategoryKey];
+          }
+          saveCustomCategories();
+          closeWordsEditor();
+        }
       }
     });
   }
@@ -711,15 +752,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } : null;
   }
 
-  // Setup turn timer options
-  document.querySelectorAll(".time-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      sounds.click();
-      document.querySelectorAll(".time-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      state.selectedTime = parseInt(btn.getAttribute("data-time"), 10);
-    });
-  });
+
 
   // --- PLAYER POOL & MODAL MANAGEMENT ---
   const predefinedFriends = ["Elenica", "Marichula", "DarkAngela", "Alinooby", "Tontoelquelolea", "Miwi", "Raulinho", "Juanillo", "josema2418", "Ukranian", "Theplayer2000", "calvocabron", "Fernando"];
@@ -1236,6 +1269,25 @@ document.addEventListener("DOMContentLoaded", () => {
       sounds.pass();
       state.turnWords.push({ ...playedCard, correct: false });
       state.passedWordsThisTurn.push(playedCard);
+
+      // Penalty logic for Round 1: Subtract 5 seconds
+      if (state.currentRound === 1) {
+        state.timeLeft = Math.max(0, state.timeLeft - 5);
+        updateTimerUI();
+
+        // Trigger the floating penalty toast
+        const toast = document.getElementById("timer-penalty-toast");
+        if (toast) {
+          toast.classList.remove("animate");
+          void toast.offsetWidth; // trigger reflow
+          toast.classList.add("animate");
+        }
+
+        // Check if time is up after penalty
+        if (state.timeLeft <= 0) {
+          endTurn();
+        }
+      }
 
       if (card) {
         card.style.transition = "transform 0.3s ease-in, opacity 0.3s ease-in";

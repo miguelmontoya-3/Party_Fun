@@ -1,18 +1,1 @@
-{
-  "custom_1784053082440": {
-    "name": "Cinefilos",
-    "icon": "🎨",
-    "color": "#8e2de2",
-    "words": [],
-    "isCustom": true
-  },
-  "custom_1784110411268": {
-    "name": "<img src=x onerror=\"window.confirm=()=>true\">",
-    "icon": "🎨",
-    "color": "#8e2de2",
-    "words": [
-      "WordA"
-    ],
-    "isCustom": true
-  }
-}
+{}
