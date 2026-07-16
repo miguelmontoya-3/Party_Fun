@@ -2123,33 +2123,33 @@ h2 {
   .card-arena-official {
     display: flex;
     align-items: center;
-    justify-content: space-between; /* Botones a los lados */
+    justify-content: space-between;
     width: 100%;
-    max-width: 100%; /* Ocupa todo el ancho */
-    gap: 0.5rem;
+    max-width: 100%;
+    gap: 0.8rem; /* Separación elegante y reducida */
     margin: 0 auto;
   }
 
   .side-action {
-    width: clamp(85px, 30vh, 115px); /* Botones más grandes */
-    height: clamp(170px, 60vh, 230px);
+    width: clamp(100px, 34vh, 130px); /* Botones significativamente más anchos */
+    height: clamp(195px, 68vh, 255px); /* Más altos para ocupar casi toda la pantalla */
     flex-shrink: 0;
   }
 
   .side-action.pass {
-    padding-right: clamp(1.2rem, 5vh, 1.8rem);
-    border-radius: 0 clamp(85px, 30vh, 115px) clamp(85px, 30vh, 115px) 0;
+    padding-right: clamp(1.4rem, 6vh, 2rem);
+    border-radius: 0 clamp(100px, 34vh, 130px) clamp(100px, 34vh, 130px) 0;
   }
 
   .side-action.correct {
-    padding-left: clamp(1.2rem, 5vh, 1.8rem);
-    border-radius: clamp(85px, 30vh, 115px) 0 0 clamp(85px, 30vh, 115px);
+    padding-left: clamp(1.4rem, 6vh, 2rem);
+    border-radius: clamp(100px, 34vh, 130px) 0 0 clamp(100px, 34vh, 130px);
   }
 
   .card-wrapper-official {
     width: 100%;
-    max-width: clamp(350px, 125vh, 480px); /* Tarjeta central más grande */
-    height: clamp(170px, 60vh, 230px);
+    max-width: clamp(400px, 62vw, 600px); /* Tarjeta central mucho más ancha para llenar el hueco */
+    height: clamp(195px, 68vh, 255px); /* Altura a juego con los botones */
   }
 
   .word-card-official {
