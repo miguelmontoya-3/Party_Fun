@@ -1476,9 +1476,8 @@ h2 {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
+  right: 0;
+  bottom: 0;
   background: rgba(10, 15, 30, 0.6);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -1880,15 +1879,7 @@ h2 {
    Target: landscape viewports with max-height ~430px
    ============================================================ */
 
-/* iOS Safe Area padding */
-@supports (padding: env(safe-area-inset-left)) {
-  body {
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-}
+
 
 /* --- MOBILE LANDSCAPE: all screens --- */
 @media (orientation: landscape) and (max-height: 500px) {
