@@ -1834,15 +1834,13 @@ h2 {
   .game-screen-official {
     padding-top: 0.4rem;
     padding-bottom: max(0.6rem, env(safe-area-inset-bottom));
-    padding-left: 0;
-    padding-right: 0;
+    padding-left: max(0.8rem, env(safe-area-inset-left));
+    padding-right: max(0.8rem, env(safe-area-inset-right));
   }
 
   .game-header-official {
     margin-bottom: 0.3rem;
     max-width: 100%;
-    padding-left: max(0.8rem, env(safe-area-inset-left));
-    padding-right: max(0.8rem, env(safe-area-inset-right));
   }
 
   .header-team {
@@ -1881,29 +1879,24 @@ h2 {
   }
 
   .card-arena-official {
-    align-items: center;
     gap: 0.5rem;
     max-width: 100%;
   }
 
   .side-action {
-    width: 80px;
-    height: 160px;
+    width: 72px;
+    height: 144px;
     flex-shrink: 0;
   }
 
   .side-action.pass {
-    padding-left: max(0.2rem, env(safe-area-inset-left));
     padding-right: 1.2rem;
     border-radius: 0 100px 100px 0;
-    justify-content: flex-end;
   }
 
   .side-action.correct {
-    padding-right: max(0.2rem, env(safe-area-inset-right));
     padding-left: 1.2rem;
     border-radius: 100px 0 0 100px;
-    justify-content: flex-start;
   }
 
   .card-wrapper-official {
@@ -1958,8 +1951,6 @@ h2 {
 
   .game-footer-official {
     margin-top: 0.3rem;
-    padding-left: max(0.8rem, env(safe-area-inset-left));
-    padding-right: max(0.8rem, env(safe-area-inset-right));
   }
 
   .game-round-name-official {
@@ -2275,11 +2266,8 @@ h2 {
   }
 
   .card-wrapper-official {
-    flex-shrink: 0;
-    width: 290px;
-    max-width: 290px;
     height: 140px;
-    align-self: center;
+    max-width: 290px;
   }
 
   .card-word-official {
@@ -2287,10 +2275,8 @@ h2 {
   }
 
   .side-action {
-    flex: 1;
-    width: auto;
-    height: auto;
-    min-height: 120px;
+    width: 52px;
+    height: 104px;
   }
 
   .timer-container-official {
