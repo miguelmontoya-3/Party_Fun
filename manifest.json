@@ -1,0 +1,27 @@
+{
+  "short_name": "PartyFun",
+  "name": "PartyFun Web",
+  "description": "Lleva PartyFun a tus reuniones con amigos. Un juego de mesa rápido y divertido en tu navegador.",
+  "icons": [
+    {
+      "src": "./android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "./apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#4c70a9",
+  "theme_color": "#4c70a9",
+  "display": "standalone",
+  "orientation": "any"
+}
