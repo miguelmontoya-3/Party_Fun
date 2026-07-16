@@ -435,25 +435,51 @@ h2 {
   gap: 0.3rem;
 }
 
-/* Tarjetas de Equipos con colores del mockup */
+/* Tarjetas de Equipos con colores del mockup y estilo 3D de ficha de juego */
 .team-setup-card.red {
-  border: 2.5px solid #fee2e2;
+  border: 3px solid #fca5a5;
+  border-bottom-width: 5px; /* Bisel físico 3D ajustado a 5px */
   background: #ffffff;
+  box-shadow: 
+    0 4px 0 rgba(239, 68, 68, 0.08), 
+    0 8px 16px rgba(0, 0, 0, 0.04);
 }
 .team-setup-card.red:hover {
-  border-color: #fca5a5;
-  background: #fff5f5;
-  box-shadow: 0 6px 12px rgba(239, 68, 68, 0.04);
+  transform: translateY(-2px);
+  border-bottom-width: 7px; /* Elevado */
+  box-shadow: 
+    0 6px 0 rgba(239, 68, 68, 0.1), 
+    0 10px 20px rgba(0, 0, 0, 0.06);
+}
+.team-setup-card.red:active {
+  transform: translateY(2px);
+  border-bottom-width: 3px; /* Hundido */
+  box-shadow: 
+    0 2px 0 rgba(239, 68, 68, 0.06), 
+    0 4px 8px rgba(0, 0, 0, 0.04);
 }
 
 .team-setup-card.blue {
-  border: 2.5px solid #e0f2fe;
+  border: 3px solid #7dd3fc;
+  border-bottom-width: 5px; /* Bisel físico 3D ajustado a 5px */
   background: #ffffff;
+  box-shadow: 
+    0 4px 0 rgba(2, 132, 199, 0.08), 
+    0 8px 16px rgba(0, 0, 0, 0.04);
 }
 .team-setup-card.blue:hover {
-  border-color: #7dd3fc;
-  background: #f0f9ff;
-  box-shadow: 0 6px 12px rgba(2, 132, 199, 0.04);
+  transform: translateY(-2px);
+  border-bottom-width: 7px; /* Elevado */
+  box-shadow: 
+    0 6px 0 rgba(2, 132, 199, 0.1), 
+    0 10px 20px rgba(0, 0, 0, 0.06);
+}
+.team-setup-card.blue:active {
+  transform: translateY(2px);
+  border-bottom-width: 3px; /* Hundido */
+  box-shadow: 
+    0 2px 0 rgba(2, 132, 199, 0.06), 
+    0 4px 8px rgba(0, 0, 0, 0.04);
 }
 
 .team-card-chips {
@@ -513,6 +539,32 @@ h2 {
   letter-spacing: 1px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden; /* Necesario para que no sobresalga el brillo */
+}
+
+/* Efecto de destello de luz metálico diagonal deslizante */
+#btn-start-game::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 30%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  animation: shineStartBtn 3.5s infinite ease-in-out;
+}
+
+@keyframes shineStartBtn {
+  0% { left: -50%; }
+  12% { left: 125%; }
+  100% { left: 125%; }
 }
 
 #btn-start-game:hover {
@@ -527,6 +579,16 @@ h2 {
   box-shadow: 
     0 4px 10px rgba(14, 165, 233, 0.3), 
     0 2px 0 #0369a1;
+}
+
+/* Animación interactiva en los emojis redondos de equipos cuando se pasa el cursor */
+.team-setup-card:hover .team-card-icon {
+  animation: emojiBounce 0.6s infinite alternate cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@keyframes emojiBounce {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-7px) scale(1.2) rotate(5deg); }
 }
 
 .categories-selected-chips {
