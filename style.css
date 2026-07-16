@@ -1832,7 +1832,8 @@ h2 {
   }
 
   .game-screen-official {
-    padding: 0.4rem 0.8rem;
+    padding-top: 0.4rem;
+    padding-bottom: max(0.6rem, env(safe-area-inset-bottom));
     padding-left: max(0.8rem, env(safe-area-inset-left));
     padding-right: max(0.8rem, env(safe-area-inset-right));
   }
@@ -1878,29 +1879,34 @@ h2 {
   }
 
   .card-arena-official {
-    gap: 0.5rem;
+    align-items: stretch;
+    gap: 0.6rem;
     max-width: 100%;
   }
 
   .side-action {
-    width: 72px;
-    height: 144px;
+    flex: 1;
+    height: auto;
+    min-height: 140px;
     flex-shrink: 0;
   }
 
   .side-action.pass {
-    padding-right: 1.2rem;
-    border-radius: 0 100px 100px 0;
+    padding: 0.5rem;
+    border-radius: 20px;
   }
 
   .side-action.correct {
-    padding-left: 1.2rem;
-    border-radius: 100px 0 0 100px;
+    padding: 0.5rem;
+    border-radius: 20px;
   }
 
   .card-wrapper-official {
+    flex-shrink: 0;
+    width: 320px;
     max-width: 320px;
     height: 160px;
+    align-self: center;
   }
 
   .word-card-official {
@@ -2265,8 +2271,11 @@ h2 {
   }
 
   .card-wrapper-official {
-    height: 140px;
+    flex-shrink: 0;
+    width: 290px;
     max-width: 290px;
+    height: 140px;
+    align-self: center;
   }
 
   .card-word-official {
@@ -2274,8 +2283,10 @@ h2 {
   }
 
   .side-action {
-    width: 60px;
-    height: 120px;
+    flex: 1;
+    width: auto;
+    height: auto;
+    min-height: 120px;
   }
 
   .timer-container-official {
