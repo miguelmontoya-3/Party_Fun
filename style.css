@@ -1879,31 +1879,35 @@ h2 {
   }
 
   .card-arena-official {
-    gap: 0.5rem;
-    max-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: clamp(540px, 95vw, 840px);
+    gap: clamp(0.5rem, 4vw, 2.5rem);
+    margin: 0 auto;
   }
 
   .side-action {
-    width: 105px;
-    height: 210px;
+    width: clamp(72px, 27.5vh, 105px);
+    height: clamp(144px, 55vh, 210px);
     flex-shrink: 0;
   }
 
   .side-action.pass {
-    padding-right: 1.5rem;
-    border-radius: 0 120px 120px 0;
+    padding-right: clamp(1rem, 4vh, 1.6rem);
+    border-radius: 0 clamp(72px, 27.5vh, 105px) clamp(72px, 27.5vh, 105px) 0;
   }
 
   .side-action.correct {
-    padding-left: 1.5rem;
-    border-radius: 120px 0 0 100px; /* fallback to keep symmetry */
-    border-top-left-radius: 120px;
-    border-bottom-left-radius: 120px;
+    padding-left: clamp(1rem, 4vh, 1.6rem);
+    border-radius: clamp(72px, 27.5vh, 105px) 0 0 clamp(72px, 27.5vh, 105px);
   }
 
   .card-wrapper-official {
-    max-width: 440px;
-    height: 210px;
+    width: 100%;
+    max-width: clamp(320px, 115vh, 440px);
+    height: clamp(144px, 55vh, 210px);
   }
 
   .word-card-official {
@@ -1930,12 +1934,12 @@ h2 {
   }
 
   .card-category-indicator-official {
-    font-size: 0.85rem;
+    font-size: clamp(0.7rem, 3.5vh, 0.85rem);
     margin-top: 0.2rem;
   }
 
   .card-word-official {
-    font-size: 2rem;
+    font-size: clamp(1.4rem, 8.5vh, 2.1rem);
   }
 
   .card-feedback {

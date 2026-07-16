@@ -960,7 +960,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     state.currentRound = 1;
-    state.currentTeamIndex = 0;
+    state.currentTeamIndex = Math.random() < 0.5 ? 0 : 1;
 
     // Pick 40 random words from selected categories
     initGameWordPool();
@@ -1492,7 +1492,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     state.currentRound = 1;
-    state.currentTeamIndex = 0;
+    state.currentTeamIndex = Math.random() < 0.5 ? 0 : 1;
 
     // Resets roundPool with the original 40 words from gamePool
     state.roundPool = [...state.gamePool];
