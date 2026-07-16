@@ -2416,11 +2416,11 @@ h2 {
 @media (orientation: landscape) and (max-height: 380px) {
 
   .logo-title {
-    font-size: 1.5rem;
+    font-size: 2.8rem;
   }
 
   .logo-subtitle {
-    font-size: 1.1rem;
+    font-size: 1.6rem;
   }
 
   .glass-panel {
