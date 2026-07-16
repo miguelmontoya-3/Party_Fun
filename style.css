@@ -364,29 +364,188 @@ h2 {
 
 /* --- SCREEN 1: HOME --- */
 #screen-home .glass-panel {
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  gap: 1.2rem;
+  padding: 2.2rem;
+  max-width: 860px;
 }
 
-.home-layout {
+.home-middle-row {
   display: flex;
   width: 100%;
-  gap: 2rem;
-  flex: 1;
-  min-height: 0; /* Important for flex child sizing */
+  align-self: stretch;
+  gap: 1.5rem;
 }
 
-.home-left, .home-right {
+.home-middle-row .team-setup-card {
   flex: 1;
+  min-width: 0;
+}
+
+.home-bottom-row {
+  width: 100%;
   display: flex;
-  flex-direction: column;
   justify-content: center;
-  min-height: 0;
+  align-items: center;
+  margin: 0.4rem 0;
 }
 
-.home-right {
-  border-left: 1px solid var(--border-light);
-  padding-left: 2rem;
+.btn-categories-selector {
+  background: #f0f4f8;
+  border: 2px solid #cbd5e1;
+  color: #334155;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.6rem 2.2rem;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-categories-selector:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #0f172a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+}
+
+.btn-categories-selector:active {
+  transform: translateY(1px);
+}
+
+.section-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #64748b; /* Slate gray labels */
+  margin-bottom: 0.4rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* Tarjetas de Equipos con colores del mockup */
+.team-setup-card.red {
+  border: 2.5px solid #fee2e2;
+  background: #ffffff;
+}
+.team-setup-card.red:hover {
+  border-color: #fca5a5;
+  background: #fff5f5;
+  box-shadow: 0 6px 12px rgba(239, 68, 68, 0.04);
+}
+
+.team-setup-card.blue {
+  border: 2.5px solid #e0f2fe;
+  background: #ffffff;
+}
+.team-setup-card.blue:hover {
+  border-color: #7dd3fc;
+  background: #f0f9ff;
+  box-shadow: 0 6px 12px rgba(2, 132, 199, 0.04);
+}
+
+.team-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+.player-chip-home {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px; /* Píldora completamente redondeada */
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin: 2px;
+  line-height: 1;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.player-chip-home.red {
+  background: #ffe4e6;
+  color: #e11d48;
+  border-color: #fecdd3;
+}
+
+.player-chip-home.blue {
+  background: #e0f2fe;
+  color: #0284c7;
+  border-color: #bae6fd;
+}
+
+.no-players-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-style: italic;
+  margin-top: 0.3rem;
+}
+
+/* Botón principal de Empezar Partida (3D pill con sombra brillante) */
+#btn-start-game {
+  background: linear-gradient(135deg, #38bdf8, #0284c7);
+  color: #ffffff;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  padding: 0.9rem 3.5rem;
+  border-radius: 50px;
+  border: 2px solid #ffffff;
+  box-shadow: 
+    0 8px 20px rgba(14, 165, 233, 0.4), 
+    0 4px 0 #0369a1;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#btn-start-game:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 
+    0 12px 24px rgba(14, 165, 233, 0.5), 
+    0 4px 0 #0369a1;
+}
+
+#btn-start-game:active {
+  transform: translateY(2px) scale(0.98);
+  box-shadow: 
+    0 4px 10px rgba(14, 165, 233, 0.3), 
+    0 2px 0 #0369a1;
+}
+
+.categories-selected-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+.category-chip-home {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.7rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  border: 1.5px solid;
 }
 
 .setup-group {
@@ -1395,37 +1554,45 @@ h2 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   text-align: center;
   padding: 0.5rem 0;
 }
 
 .logo-title {
   font-family: 'Outfit', sans-serif;
-  font-size: 3.5rem;
+  font-size: 4.5rem; /* Aumentado de 3.5rem a 4.5rem para mayor presencia */
   font-weight: 950;
-  letter-spacing: 4px;
+  letter-spacing: 5px;
   color: #ffffff;
   text-transform: uppercase;
   line-height: 0.95;
   text-shadow: 
     0 2px 0 #2b4975,
-    0 4px 0 #2b4975,
-    0 6px 0 #2b4975,
-    0 8px 16px rgba(0, 0, 0, 0.4);
+    0 4px 0 #1e3050,
+    0 6px 0 #121d30,
+    0 8px 15px rgba(0, 0, 0, 0.4),
+    0 0 25px rgba(56, 189, 248, 0.45); /* Brillo de neón cian prominente */
 }
 
 .logo-subtitle {
   font-family: 'Caveat', cursive;
-  font-size: 2.5rem;
-  color: #fbbf24; /* Vibrant yellow */
+  font-size: 2.8rem; /* Aumentado de 2.5rem a 2.8rem */
+  color: #fbbf24; /* Amarillo vibrante */
   font-weight: 700;
   transform: rotate(-5deg) translateY(-8px);
   display: inline-block;
   text-shadow: 
     2px 2px 0px #1c2e4a,
-    0 4px 8px rgba(0, 0, 0, 0.3);
-  margin-top: 0.2rem;
+    0 4px 8px rgba(0, 0, 0, 0.4);
+  margin-top: 0.3rem;
+  animation: logoWobble 4s infinite ease-in-out; /* Animación de flotación lúdica */
+}
+
+@keyframes logoWobble {
+  0% { transform: rotate(-5deg) translateY(-8px) scale(1); }
+  50% { transform: rotate(-3deg) translateY(-14px) scale(1.05); }
+  100% { transform: rotate(-5deg) translateY(-8px) scale(1); }
 }
 
 /* --- SCOREBOARD BUTTON & TABLE STYLING --- */
@@ -1674,26 +1841,40 @@ h2 {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* ---- SCREEN 1: HOME ---- */
   .logo-container {
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.4rem;
     padding: 0;
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .logo-title {
-    font-size: 1.4rem;
-    letter-spacing: 2px;
+    font-size: 3.2rem; /* Aumentado de 2.2rem a 3.2rem */
+    letter-spacing: 4px;
     text-shadow:
       0 1px 0 #2b4975,
-      0 2px 0 #2b4975,
-      0 3px 6px rgba(0, 0, 0, 0.3);
+      0 2px 0 #1e3050,
+      0 3px 0 #121d30,
+      0 4px 8px rgba(0, 0, 0, 0.4),
+      0 0 16px rgba(56, 189, 248, 0.45);
   }
 
   .logo-subtitle {
-    font-size: 1rem;
+    font-size: 2rem; /* Aumentado de 1.5rem a 2rem */
     transform: rotate(-4deg) translateY(-2px);
-    margin-top: 0;
+    margin-top: 0.15rem;
+    text-shadow: 
+      1px 1px 0px #1c2e4a,
+      0 2px 4px rgba(0, 0, 0, 0.3);
+    animation: logoWobbleMobile 4s infinite ease-in-out;
+  }
+
+  @keyframes logoWobbleMobile {
+    0% { transform: rotate(-4deg) translateY(-2px) scale(1); }
+    50% { transform: rotate(-2deg) translateY(-5px) scale(1.05); }
+    100% { transform: rotate(-4deg) translateY(-2px) scale(1); }
   }
 
   .glass-panel {
@@ -1710,75 +1891,73 @@ h2 {
   }
 
   #screen-home {
-    padding-top: 0.3rem;
+    padding-top: 0.2rem;
   }
 
   #screen-home .glass-panel {
-    overflow-y: visible;
+    gap: 0.6rem;
+    padding: 0.8rem 1rem;
+    overflow-y: auto;
   }
 
-  .home-layout {
-    gap: 1rem;
+  .home-middle-row {
+    display: flex;
+    width: 100%;
+    align-self: stretch;
+    gap: 0.6rem;
   }
 
-  .home-right {
-    padding-left: 1rem;
-  }
-
-  .setup-group {
-    margin-bottom: 0.4rem;
-  }
-
-  .setup-group label {
-    font-size: 0.7rem;
-    margin-bottom: 0.15rem;
-  }
-
-  .team-cards-container {
-    gap: 0.4rem;
-    margin-top: 0.25rem;
+  .section-label {
+    font-size: 0.65rem;
+    margin-bottom: 0.2rem;
+    letter-spacing: 0.5px;
   }
 
   .team-setup-card {
-    padding: 0.5rem 0.8rem;
+    flex: 1;
+    min-width: 0;
+    padding: 0.4rem 0.8rem;
     border-radius: 12px;
-    border-width: 2px;
+    border-width: 2.5px;
   }
 
   .team-card-icon {
     font-size: 1.2rem;
-    margin-right: 0.5rem;
+    margin-right: 0.4rem;
   }
 
   .team-card-name {
-    font-size: 0.85rem;
-  }
-
-  .team-card-count {
-    font-size: 0.65rem;
+    font-size: 0.8rem;
   }
 
   .team-card-arrow {
-    font-size: 0.85rem;
-  }
-
-  .time-options {
-    gap: 0.3rem;
-  }
-
-  .time-btn {
-    padding: 0.35rem;
     font-size: 0.8rem;
+  }
+
+  .player-chip-home {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.65rem;
+    border-radius: 6px;
+  }
+
+  .home-bottom-row {
+    margin: 0.2rem 0;
+  }
+
+  .btn-categories-selector {
+    min-width: 200px;
+    font-size: 0.85rem;
+    padding: 0.45rem 1.2rem;
     border-radius: 10px;
   }
 
   .home-footer {
-    margin-top: 0.5rem;
+    margin-top: 0.3rem;
   }
 
   .home-footer .btn-primary {
     font-size: 0.9rem !important;
-    padding: 0.6rem 1.8rem !important;
+    padding: 0.5rem 1.8rem !important;
   }
 
   /* ---- SCREEN 2: ROUND TRANSITION ---- */
@@ -2420,3 +2599,4 @@ h2 {
     min-height: 44px;
   }
 }
+

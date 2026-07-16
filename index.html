@@ -25,6 +25,8 @@
   <div class="bg-glow-2"></div>
   <div class="bg-glow-3"></div>
 
+
+
   <!-- Orientation warning overlay -->
   <div id="orientation-warning">
     <div class="rotate-device-icon"></div>
@@ -45,55 +47,41 @@
       </div>
       <div class="glass-panel">
         
-        <div class="home-layout">
-          <!-- Configuración de Equipos y Tiempo -->
-          <div class="home-left">
-            <div class="setup-group">
-              <label>Configuración de Equipos</label>
-              <div class="team-cards-container">
-                <div id="btn-edit-red" class="team-setup-card red">
-                  <div class="team-card-icon">🔴</div>
-                  <div class="team-card-info">
-                    <span class="team-card-name">Equipo Rojo</span>
-                    <span id="red-players-count" class="team-card-count">Cargando integrantes...</span>
-                  </div>
-                  <div class="team-card-arrow">✏️</div>
-                </div>
-
-                <div id="btn-edit-blue" class="team-setup-card blue">
-                  <div class="team-card-icon">🔵</div>
-                  <div class="team-card-info">
-                    <span class="team-card-name">Equipo Azul</span>
-                    <span id="blue-players-count" class="team-card-count">Cargando integrantes...</span>
-                  </div>
-                  <div class="team-card-arrow">✏️</div>
-                </div>
+        <div class="home-middle-row">
+          <!-- Tarjeta Equipo Rojo -->
+          <div id="btn-edit-red" class="team-setup-card red">
+            <div class="team-card-icon">🔴</div>
+            <div class="team-card-info">
+              <span class="team-card-name">Equipo Rojo</span>
+              <div id="red-players-count" class="team-card-chips">
+                <!-- Chips dinámicos -->
               </div>
             </div>
+            <div class="team-card-arrow">✏️</div>
           </div>
 
-          <!-- Selección de Categorías y Tiempo -->
-          <div class="home-right">
-
-
-            <div class="setup-group">
-              <label>Selección de Mazos</label>
-              <div class="team-cards-container">
-                <div id="btn-edit-categories" class="team-setup-card categories-card">
-                  <div class="team-card-icon">🎬</div>
-                  <div class="team-card-info">
-                    <span class="team-card-name">Categorías</span>
-                    <span id="categories-selected-count" class="team-card-count">0 seleccionadas</span>
-                  </div>
-                  <div class="team-card-arrow">✏️</div>
-                </div>
+          <!-- Tarjeta Equipo Azul -->
+          <div id="btn-edit-blue" class="team-setup-card blue">
+            <div class="team-card-icon">🔵</div>
+            <div class="team-card-info">
+              <span class="team-card-name">Equipo Azul</span>
+              <div id="blue-players-count" class="team-card-chips">
+                <!-- Chips dinámicos -->
               </div>
             </div>
+            <div class="team-card-arrow">✏️</div>
           </div>
         </div>
 
+        <!-- Fila Categorías -->
+        <div class="home-bottom-row">
+          <button id="btn-edit-categories" class="btn btn-secondary btn-categories-selector" type="button">
+            🎬 MAZOS DE JUEGO ( <span id="categories-selected-count">0</span> )
+          </button>
+        </div>
+
         <div class="home-footer">
-          <button id="btn-start-game" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.9rem 2.5rem;">Crear Partida</button>
+          <button id="btn-start-game" class="btn btn-primary">Empezar Partida</button>
         </div>
       </div>
     </div>

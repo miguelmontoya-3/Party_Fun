@@ -224,7 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function updateHomeCategoriesCount() {
     if (categoriesSelectedCountEl) {
       const count = state.selectedCategories.length;
-      categoriesSelectedCountEl.innerText = `${count} ${count === 1 ? 'seleccionada' : 'seleccionadas'}`;
+      categoriesSelectedCountEl.innerText = count;
     }
   }
 
@@ -776,12 +776,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateHomeTeamCounts() {
     if (redPlayersCountEl) {
-      const redCount = state.teams[0].players.length;
-      redPlayersCountEl.innerText = `${redCount} ${redCount === 1 ? 'integrante' : 'integrantes'} (${state.teams[0].players.join(", ") || 'ninguno'})`;
+      const redPlayers = state.teams[0].players;
+      if (redPlayers.length === 0) {
+        redPlayersCountEl.innerHTML = `<span class="no-players-label">Sin integrantes</span>`;
+      } else {
+        redPlayersCountEl.innerHTML = redPlayers.map(p => 
+          `<span class="player-chip-home red">${p}</span>`
+        ).join("");
+      }
     }
     if (bluePlayersCountEl) {
-      const blueCount = state.teams[1].players.length;
-      bluePlayersCountEl.innerText = `${blueCount} ${blueCount === 1 ? 'integrante' : 'integrantes'} (${state.teams[1].players.join(", ") || 'ninguno'})`;
+      const bluePlayers = state.teams[1].players;
+      if (bluePlayers.length === 0) {
+        bluePlayersCountEl.innerHTML = `<span class="no-players-label">Sin integrantes</span>`;
+      } else {
+        bluePlayersCountEl.innerHTML = bluePlayers.map(p => 
+          `<span class="player-chip-home blue">${p}</span>`
+        ).join("");
+      }
     }
   }
 
