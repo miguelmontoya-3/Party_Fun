@@ -1884,24 +1884,26 @@ h2 {
   }
 
   .side-action {
-    width: 72px;
-    height: 144px;
+    width: 105px;
+    height: 210px;
     flex-shrink: 0;
   }
 
   .side-action.pass {
-    padding-right: 1.2rem;
-    border-radius: 0 100px 100px 0;
+    padding-right: 1.5rem;
+    border-radius: 0 120px 120px 0;
   }
 
   .side-action.correct {
-    padding-left: 1.2rem;
-    border-radius: 100px 0 0 100px;
+    padding-left: 1.5rem;
+    border-radius: 120px 0 0 100px; /* fallback to keep symmetry */
+    border-top-left-radius: 120px;
+    border-bottom-left-radius: 120px;
   }
 
   .card-wrapper-official {
-    max-width: 320px;
-    height: 160px;
+    max-width: 440px;
+    height: 210px;
   }
 
   .word-card-official {
@@ -1928,12 +1930,12 @@ h2 {
   }
 
   .card-category-indicator-official {
-    font-size: 0.7rem;
+    font-size: 0.85rem;
     margin-top: 0.2rem;
   }
 
   .card-word-official {
-    font-size: 1.6rem;
+    font-size: 2rem;
   }
 
   .card-feedback {
@@ -2266,17 +2268,17 @@ h2 {
   }
 
   .card-wrapper-official {
-    height: 140px;
-    max-width: 290px;
+    height: 150px;
+    max-width: 320px;
   }
 
   .card-word-official {
-    font-size: 1.3rem;
+    font-size: 1.4rem;
   }
 
   .side-action {
-    width: 52px;
-    height: 104px;
+    width: 75px;
+    height: 150px;
   }
 
   .timer-container-official {
