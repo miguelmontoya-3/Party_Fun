@@ -1834,13 +1834,15 @@ h2 {
   .game-screen-official {
     padding-top: 0.4rem;
     padding-bottom: max(0.6rem, env(safe-area-inset-bottom));
-    padding-left: max(0.8rem, env(safe-area-inset-left));
-    padding-right: max(0.8rem, env(safe-area-inset-right));
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .game-header-official {
     margin-bottom: 0.3rem;
     max-width: 100%;
+    padding-left: max(0.8rem, env(safe-area-inset-left));
+    padding-right: max(0.8rem, env(safe-area-inset-right));
   }
 
   .header-team {
@@ -1879,34 +1881,34 @@ h2 {
   }
 
   .card-arena-official {
-    align-items: stretch;
-    gap: 0.6rem;
+    align-items: center;
+    gap: 0.5rem;
     max-width: 100%;
   }
 
   .side-action {
-    flex: 1;
-    height: auto;
-    min-height: 140px;
+    width: 80px;
+    height: 160px;
     flex-shrink: 0;
   }
 
   .side-action.pass {
-    padding: 0.5rem;
-    border-radius: 20px;
+    padding-left: max(0.2rem, env(safe-area-inset-left));
+    padding-right: 1.2rem;
+    border-radius: 0 100px 100px 0;
+    justify-content: flex-end;
   }
 
   .side-action.correct {
-    padding: 0.5rem;
-    border-radius: 20px;
+    padding-right: max(0.2rem, env(safe-area-inset-right));
+    padding-left: 1.2rem;
+    border-radius: 100px 0 0 100px;
+    justify-content: flex-start;
   }
 
   .card-wrapper-official {
-    flex-shrink: 0;
-    width: 320px;
     max-width: 320px;
     height: 160px;
-    align-self: center;
   }
 
   .word-card-official {
@@ -1956,6 +1958,8 @@ h2 {
 
   .game-footer-official {
     margin-top: 0.3rem;
+    padding-left: max(0.8rem, env(safe-area-inset-left));
+    padding-right: max(0.8rem, env(safe-area-inset-right));
   }
 
   .game-round-name-official {
